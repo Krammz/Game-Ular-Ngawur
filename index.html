@@ -1,135 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Snake 3D</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
-      font-family: Arial, sans-serif;
-      color: white;
-    }
-    #score {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      font-size: 20px;
-      background: rgba(0,0,0,0.5);
-      padding: 10px 15px;
-      border-radius: 10px;
-    }
-    #gameover {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 40px;
-      display: none;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Snake Hunter 3D</title>
+<style>
+body { margin:0; overflow:hidden; background:#000; }
+#ui {
+  position:absolute; top:10px; left:10px;
+  color:white; font-family:sans-serif;
+}
+button {
+  position:fixed;
+  bottom:20px;
+  width:60px; height:60px;
+  font-size:20px;
+  opacity:0.7;
+}
+#up { left:80px; bottom:90px; }
+#down { left:80px; }
+#left { left:20px; }
+#right { left:140px; }
+</style>
 </head>
 <body>
 
-<div id="score">Score: 0</div>
-<div id="gameover">GAME OVER<br>Refresh untuk main lagi</div>
+<div id="ui">Hit: 0 / 200</div>
+
+<button id="up">↑</button>
+<button id="down">↓</button>
+<button id="left">←</button>
+<button id="right">→</button>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 
 <script>
 let scene = new THREE.Scene();
-let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+let camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight,0.1,1000);
 let renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // lighting
-let light = new THREE.PointLight(0xffffff, 1);
-light.position.set(10,10,10);
+let light = new THREE.DirectionalLight(0xffffff,1);
+light.position.set(5,10,7);
 scene.add(light);
 
-// grid floor
-let grid = new THREE.GridHelper(20, 20);
-scene.add(grid);
+// ground
+let ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(50,50),
+  new THREE.MeshStandardMaterial({color:0x222222})
+);
+ground.rotation.x = -Math.PI/2;
+scene.add(ground);
 
 // snake
 let snake = [];
-let dir = {x:1, z:0};
-let size = 0.5;
+let dir = {x:0.2,z:0};
 
-function createBlock(x,z,color=0x00ff00){
-  let geo = new THREE.BoxGeometry(size,size,size);
-  let mat = new THREE.MeshStandardMaterial({color:color});
-  let cube = new THREE.Mesh(geo,mat);
-  cube.position.set(x,0.25,z);
-  scene.add(cube);
-  return cube;
+function createSegment(x,z){
+  let geo = new THREE.SphereGeometry(0.4,16,16);
+  let mat = new THREE.MeshStandardMaterial({color:0x00ff88});
+  let m = new THREE.Mesh(geo,mat);
+  m.position.set(x,0.4,z);
+  scene.add(m);
+  return m;
 }
 
-// initial snake
-snake.push(createBlock(0,0));
-snake.push(createBlock(-1,0));
+// init snake
+for(let i=0;i<5;i++){
+  snake.push(createSegment(-i,0));
+}
 
-// food
-let food = createBlock(2,2,0xff0000);
+// target (orang sederhana)
+function createHuman(){
+  let geo = new THREE.BoxGeometry(0.6,1.2,0.4);
+  let mat = new THREE.MeshStandardMaterial({color:0xff4444});
+  let human = new THREE.Mesh(geo,mat);
+  human.position.set(
+    Math.random()*20-10,
+    0.6,
+    Math.random()*20-10
+  );
+  scene.add(human);
+  return human;
+}
 
-// camera
-camera.position.set(5,8,10);
-camera.lookAt(0,0,0);
+let human = createHuman();
 
-let score = 0;
+let hit = 0;
 
-// controls
-document.addEventListener("keydown", e=>{
-  if(e.key==="ArrowUp") dir={x:0,z:-1};
-  if(e.key==="ArrowDown") dir={x:0,z:1};
-  if(e.key==="ArrowLeft") dir={x:-1,z:0};
-  if(e.key==="ArrowRight") dir={x:1,z:0};
-});
+// control (touch)
+document.getElementById("up").onclick=()=>dir={x:0,z:-0.2};
+document.getElementById("down").onclick=()=>dir={x:0,z:0.2};
+document.getElementById("left").onclick=()=>dir={x:-0.2,z:0};
+document.getElementById("right").onclick=()=>dir={x:0.2,z:0};
 
-function moveSnake(){
+// movement
+function updateSnake(){
   let head = snake[0];
   let newX = head.position.x + dir.x;
   let newZ = head.position.z + dir.z;
 
-  // collision with self
-  for(let s of snake){
-    if(s.position.x===newX && s.position.z===newZ){
-      document.getElementById("gameover").style.display="block";
-      return false;
-    }
-  }
-
-  let newHead = createBlock(newX,newZ);
+  let newHead = createSegment(newX,newZ);
   snake.unshift(newHead);
 
-  // eat food
-  if(newX===food.position.x && newZ===food.position.z){
-    score++;
-    document.getElementById("score").innerText="Score: "+score;
+  let tail = snake.pop();
+  scene.remove(tail);
 
-    food.position.x = Math.floor(Math.random()*10-5);
-    food.position.z = Math.floor(Math.random()*10-5);
-  } else {
-    let tail = snake.pop();
-    scene.remove(tail);
+  // collision with human
+  if(newHead.position.distanceTo(human.position) < 0.8){
+    hit++;
+    document.getElementById("ui").innerText = "Hit: "+hit+" / 200";
+
+    scene.remove(human);
+    human = createHuman();
+
+    // grow snake
+    snake.push(createSegment(newX,newZ));
   }
+}
 
-  return true;
+// camera follow
+function updateCamera(){
+  let head = snake[0];
+  camera.position.set(head.position.x+5,5,head.position.z+5);
+  camera.lookAt(head.position);
 }
 
 function animate(){
   requestAnimationFrame(animate);
+  updateSnake();
+  updateCamera();
   renderer.render(scene,camera);
 }
 animate();
-
-// game loop
-setInterval(()=>{
-  if(!moveSnake()) return;
-},300);
-
 </script>
 
 </body>
