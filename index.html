@@ -1,138 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Snake Hunter 3D</title>
+<title>Runner 3D</title>
 <style>
 body { margin:0; overflow:hidden; background:#000; }
 #ui {
-  position:absolute; top:10px; left:10px;
-  color:white; font-family:sans-serif;
+  position:absolute;
+  top:20px;
+  left:20px;
+  color:white;
+  font-family:Arial;
 }
-button {
-  position:fixed;
-  bottom:20px;
-  width:60px; height:60px;
-  font-size:20px;
-  opacity:0.7;
-}
-#up { left:80px; bottom:90px; }
-#down { left:80px; }
-#left { left:20px; }
-#right { left:140px; }
 </style>
 </head>
 <body>
 
-<div id="ui">Hit: 0 / 200</div>
-
-<button id="up">↑</button>
-<button id="down">↓</button>
-<button id="left">←</button>
-<button id="right">→</button>
+<div id="ui">Score: <span id="score">0</span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 
 <script>
+// scene
 let scene = new THREE.Scene();
-let camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight,0.1,1000);
+scene.fog = new THREE.Fog(0x000000, 10, 50);
+
+let camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
 let renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// lighting
-let light = new THREE.DirectionalLight(0xffffff,1);
+// light
+let light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(5,10,7);
 scene.add(light);
 
 // ground
-let ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(50,50),
-  new THREE.MeshStandardMaterial({color:0x222222})
-);
+let groundGeo = new THREE.PlaneGeometry(10,100);
+let groundMat = new THREE.MeshStandardMaterial({color:0x222222});
+let ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI/2;
 scene.add(ground);
 
-// snake
-let snake = [];
-let dir = {x:0.2,z:0};
+// player
+let playerGeo = new THREE.BoxGeometry(0.7,1,0.7);
+let playerMat = new THREE.MeshStandardMaterial({color:0x00ffcc});
+let player = new THREE.Mesh(playerGeo, playerMat);
+player.position.y = 0.5;
+scene.add(player);
 
-function createSegment(x,z){
-  let geo = new THREE.SphereGeometry(0.4,16,16);
-  let mat = new THREE.MeshStandardMaterial({color:0x00ff88});
-  let m = new THREE.Mesh(geo,mat);
-  m.position.set(x,0.4,z);
-  scene.add(m);
-  return m;
-}
+// enemy (satpam)
+let enemyGeo = new THREE.BoxGeometry(0.7,1,0.7);
+let enemyMat = new THREE.MeshStandardMaterial({color:0xff0000});
+let enemy = new THREE.Mesh(enemyGeo, enemyMat);
+enemy.position.set(0,0.5,2);
+scene.add(enemy);
 
-// init snake
-for(let i=0;i<5;i++){
-  snake.push(createSegment(-i,0));
-}
+// lanes
+let lane = 0;
+let laneX = [-2,0,2];
 
-// target (orang sederhana)
-function createHuman(){
-  let geo = new THREE.BoxGeometry(0.6,1.2,0.4);
-  let mat = new THREE.MeshStandardMaterial({color:0xff4444});
-  let human = new THREE.Mesh(geo,mat);
-  human.position.set(
-    Math.random()*20-10,
-    0.6,
-    Math.random()*20-10
-  );
-  scene.add(human);
-  return human;
-}
+// jump
+let velocityY = 0;
+let gravity = -0.02;
 
-let human = createHuman();
+// swipe detection
+let startX = 0;
+let startY = 0;
 
-let hit = 0;
+document.addEventListener("touchstart", e=>{
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
 
-// control (touch)
-document.getElementById("up").onclick=()=>dir={x:0,z:-0.2};
-document.getElementById("down").onclick=()=>dir={x:0,z:0.2};
-document.getElementById("left").onclick=()=>dir={x:-0.2,z:0};
-document.getElementById("right").onclick=()=>dir={x:0.2,z:0};
+document.addEventListener("touchend", e=>{
+  let dx = e.changedTouches[0].clientX - startX;
+  let dy = e.changedTouches[0].clientY - startY;
 
-// movement
-function updateSnake(){
-  let head = snake[0];
-  let newX = head.position.x + dir.x;
-  let newZ = head.position.z + dir.z;
-
-  let newHead = createSegment(newX,newZ);
-  snake.unshift(newHead);
-
-  let tail = snake.pop();
-  scene.remove(tail);
-
-  // collision with human
-  if(newHead.position.distanceTo(human.position) < 0.8){
-    hit++;
-    document.getElementById("ui").innerText = "Hit: "+hit+" / 200";
-
-    scene.remove(human);
-    human = createHuman();
-
-    // grow snake
-    snake.push(createSegment(newX,newZ));
+  if(Math.abs(dx) > Math.abs(dy)){
+    if(dx > 50 && lane < 2) lane++;
+    if(dx < -50 && lane > -2) lane--;
+  } else {
+    if(dy < -50 && player.position.y <= 0.51){
+      velocityY = 0.35; // jump
+    }
   }
+});
+
+// obstacles
+let obstacles = [];
+
+function createObstacle(z){
+  let geo = new THREE.BoxGeometry(1,1,1);
+  let mat = new THREE.MeshStandardMaterial({color:0xffff00});
+  let obj = new THREE.Mesh(geo, mat);
+
+  let l = Math.floor(Math.random()*3)-1;
+  obj.position.set(laneX[l+1],0.5,z);
+  scene.add(obj);
+  obstacles.push(obj);
 }
 
-// camera follow
-function updateCamera(){
-  let head = snake[0];
-  camera.position.set(head.position.x+5,5,head.position.z+5);
-  camera.lookAt(head.position);
-}
+// camera
+camera.position.set(0,3,6);
 
+// score
+let score = 0;
+
+// game loop
 function animate(){
   requestAnimationFrame(animate);
-  updateSnake();
-  updateCamera();
-  renderer.render(scene,camera);
+
+  // move forward illusion
+  ground.position.z += 0.3;
+
+  // player lane move smooth
+  player.position.x += (laneX[lane+1] - player.position.x) * 0.2;
+
+  // jump physics
+  player.position.y += velocityY;
+  velocityY += gravity;
+  if(player.position.y < 0.5){
+    player.position.y = 0.5;
+    velocityY = 0;
+  }
+
+  // spawn obstacle
+  if(Math.random() < 0.02){
+    createObstacle(-50);
+  }
+
+  // move obstacles
+  obstacles.forEach((o,i)=>{
+    o.position.z += 0.3;
+
+    // collision
+    if(
+      Math.abs(o.position.x - player.position.x) < 0.7 &&
+      Math.abs(o.position.z - player.position.z) < 0.7 &&
+      player.position.y < 1
+    ){
+      alert("GAME OVER");
+      location.reload();
+    }
+
+    if(o.position.z > 5){
+      scene.remove(o);
+      obstacles.splice(i,1);
+    }
+  });
+
+  // enemy follow
+  enemy.position.z = player.position.z + 2;
+
+  // score
+  score++;
+  document.getElementById("score").innerText = score;
+
+  renderer.render(scene, camera);
 }
+
 animate();
 </script>
 
