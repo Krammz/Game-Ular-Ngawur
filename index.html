@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Snake 3D</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle, #0f2027, #203a43, #2c5364);
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+    #score {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 20px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px 15px;
+      border-radius: 10px;
+    }
+    #gameover {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 40px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="score">Score: 0</div>
+<div id="gameover">GAME OVER<br>Refresh untuk main lagi</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+
+<script>
+let scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+let renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// lighting
+let light = new THREE.PointLight(0xffffff, 1);
+light.position.set(10,10,10);
+scene.add(light);
+
+// grid floor
+let grid = new THREE.GridHelper(20, 20);
+scene.add(grid);
+
+// snake
+let snake = [];
+let dir = {x:1, z:0};
+let size = 0.5;
+
+function createBlock(x,z,color=0x00ff00){
+  let geo = new THREE.BoxGeometry(size,size,size);
+  let mat = new THREE.MeshStandardMaterial({color:color});
+  let cube = new THREE.Mesh(geo,mat);
+  cube.position.set(x,0.25,z);
+  scene.add(cube);
+  return cube;
+}
+
+// initial snake
+snake.push(createBlock(0,0));
+snake.push(createBlock(-1,0));
+
+// food
+let food = createBlock(2,2,0xff0000);
+
+// camera
+camera.position.set(5,8,10);
+camera.lookAt(0,0,0);
+
+let score = 0;
+
+// controls
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowUp") dir={x:0,z:-1};
+  if(e.key==="ArrowDown") dir={x:0,z:1};
+  if(e.key==="ArrowLeft") dir={x:-1,z:0};
+  if(e.key==="ArrowRight") dir={x:1,z:0};
+});
+
+function moveSnake(){
+  let head = snake[0];
+  let newX = head.position.x + dir.x;
+  let newZ = head.position.z + dir.z;
+
+  // collision with self
+  for(let s of snake){
+    if(s.position.x===newX && s.position.z===newZ){
+      document.getElementById("gameover").style.display="block";
+      return false;
+    }
+  }
+
+  let newHead = createBlock(newX,newZ);
+  snake.unshift(newHead);
+
+  // eat food
+  if(newX===food.position.x && newZ===food.position.z){
+    score++;
+    document.getElementById("score").innerText="Score: "+score;
+
+    food.position.x = Math.floor(Math.random()*10-5);
+    food.position.z = Math.floor(Math.random()*10-5);
+  } else {
+    let tail = snake.pop();
+    scene.remove(tail);
+  }
+
+  return true;
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  renderer.render(scene,camera);
+}
+animate();
+
+// game loop
+setInterval(()=>{
+  if(!moveSnake()) return;
+},300);
+
+</script>
+
+</body>
+</html>
