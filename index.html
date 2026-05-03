@@ -1,63 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>KrammzLuaa Obfuscator</title>
+<title>KrammzLuaa Anomaly Obfuscator</title>
 
 <style>
-body {
-  background: #020617;
-  color: #e2e8f0;
-  font-family: Arial;
-  padding: 20px;
+body{
+  background:#020617;
+  color:#e2e8f0;
+  font-family:Arial;
+  padding:20px;
 }
-textarea {
-  width: 100%;
-  height: 200px;
-  background: #000;
-  color: #22c55e;
-  border: 1px solid #1e293b;
-  padding: 10px;
-  margin-bottom: 10px;
+textarea{
+  width:100%;
+  height:200px;
+  background:#000;
+  color:#22c55e;
+  border:1px solid #1e293b;
+  padding:10px;
+  margin-bottom:10px;
 }
-button {
-  padding: 10px;
-  margin-right: 5px;
-  background: #22c55e;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
+button{
+  padding:10px;
+  margin-right:5px;
+  background:#22c55e;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
 }
-h1 {
-  color: #38bdf8;
-}
+h1{color:#38bdf8;}
 </style>
-
 </head>
+
 <body>
 
-<h1>KrammzLuaa Obfuscator 🔒</h1>
+<h1>KrammzLuaa Anomaly 🔮</h1>
 
 <textarea id="input" placeholder="Paste Lua script..."></textarea>
 
 <button onclick="obfuscate()">Obfuscate</button>
-<button onclick="copyOutput()">Copy</button>
-<button onclick="downloadFile()">Download</button>
+<button onclick="copyOut()">Copy</button>
+<button onclick="download()">Download</button>
 
-<textarea id="output" placeholder="Result..."></textarea>
+<textarea id="output"></textarea>
 
 <script>
-function rand(len=10){
-  const c="abcdefghijklmnopqrstuvwxyz";
-  let r="_";
-  for(let i=0;i<len;i++){
-    r+=c[Math.floor(Math.random()*c.length)];
+function anomalyName(){
+  const chars = ["𓂀","Ω","Ξ","λ","Ж","Ҡ","ψ","ζ","Δ","☠","✶","✦"];
+  let name = "_";
+  for(let i=0;i<6;i++){
+    name += chars[Math.floor(Math.random()*chars.length)];
   }
-  return r;
+  return name;
 }
 
-function encode(str){
-  return str.split("").map(c=>c.charCodeAt(0)).join(",");
+function glitchEncode(str){
+  return str.split("").map(c=>{
+    return "\\" + c.charCodeAt(0);
+  }).join("");
+}
+
+function splitCode(str){
+  let parts=[];
+  for(let i=0;i<str.length;i+=20){
+    parts.push(str.slice(i,i+20));
+  }
+  return parts;
 }
 
 function obfuscate(){
@@ -68,56 +76,61 @@ function obfuscate(){
   code = code.replace(/\b(local\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\b/g,
   (m,l,n)=>{
     if(["function","end","if","then","do","for","while"].includes(n)) return m;
-    if(!map[n]) map[n]=rand();
+    if(!map[n]) map[n]=anomalyName();
     return (l||"")+map[n];
   });
 
-  // Encode whole script
-  let encoded = encode(code);
+  // Encode
+  let encoded = glitchEncode(code);
 
-  // Dummy code
-  let junk = `
-local ${rand()}=${Math.floor(Math.random()*99999)}
-if ${rand()}==${rand()} then
-  print("fake")
-end
-`;
+  // Split
+  let parts = splitCode(encoded);
 
-  // Final wrapper
+  let varName = anomalyName();
+
+  let build = parts.map(p=>`"${p}"`).join("..");
+
   let final = `
--- KrammzLuaa Obfuscator
+-- KrammzLuaa Anomaly Mode
 
-${junk}
+local ${varName} = ${build}
 
-local function _d(t)
-  local s=""
-  for i=1,#t do
-    s=s..string.char(t[i])
+local function ${anomalyName()}(s)
+  local r=""
+  for i=1,#s do
+    local c=string.sub(s,i,i)
+    if c=="\\\\" then
+      local num=""
+      i=i+1
+      while string.match(string.sub(s,i,i),"%d") do
+        num=num..string.sub(s,i,i)
+        i=i+1
+      end
+      r=r..string.char(tonumber(num))
+    end
   end
-  return s
+  return r
 end
 
-local data={${encoded}}
-
-loadstring(_d(data))()
+loadstring(${anomalyName()}(${varName}))()
 `;
 
   document.getElementById("output").value = final;
 }
 
-function copyOutput(){
-  let out = document.getElementById("output");
-  out.select();
+function copyOut(){
+  let o=document.getElementById("output");
+  o.select();
   document.execCommand("copy");
   alert("Copied!");
 }
 
-function downloadFile(){
-  let text = document.getElementById("output").value;
-  let blob = new Blob([text], {type:"text/plain"});
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "krammzluaa_obf.lua.txt";
+function download(){
+  let text=document.getElementById("output").value;
+  let blob=new Blob([text],{type:"text/plain"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="krammzluaa_anomaly.lua.txt";
   a.click();
 }
 </script>
