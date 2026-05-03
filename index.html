@@ -3,216 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S4-Samp - Krammz Firebase</title>
+    <title>S4-Samp - Krammz Firebase FIXED</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        header { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; box-shadow: 0 4px 30px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100; }
+        header { 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 15px 20px; box-shadow: 0 4px 30px rgba(0,0,0,0.2); 
+            position: sticky; top: 0; z-index: 100; 
+        }
         header h1 { color: #0056b3; font-weight: 800; font-size: 1.6rem; }
-        nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); display: flex; gap: 10px; padding: 12px 20px; overflow-x: auto; box-shadow: 0 2px 20px rgba(0,0,0,0.1); }
-        nav a { color: #333; text-decoration: none; padding: 12px 18px; border-radius: 25px; font-weight: 600; white-space: nowrap; transition: all 0.3s; }
-        nav a.active, nav a:hover { background: linear-gradient(45deg, #0056b3, #007bff); color: white; box-shadow: 0 5px 15px rgba(0,86,179,0.4); }
+        nav { 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); 
+            display: flex; gap: 10px; padding: 12px 20px; overflow-x: auto; 
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1); 
+        }
+        nav a { 
+            color: #333 !important; text-decoration: none; padding: 12px 18px; 
+            border-radius: 25px; font-weight: 600; white-space: nowrap; 
+            transition: all 0.3s; cursor: pointer; 
+        }
+        nav a.active, nav a:hover { 
+            background: linear-gradient(45deg, #0056b3, #007bff) !important; 
+            color: white !important; box-shadow: 0 5px 15px rgba(0,86,179,0.4); 
+        }
         
         main { padding: 30px 20px; max-width: 1300px; margin: 0 auto; }
-        .section { display: none; }
-        .section.active { display: block; animation: slideIn 0.5s; }
+        .section { display: none !important; }
+        .section.active { display: block !important; animation: slideIn 0.5s; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        .hero { background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 25px; padding: 50px 40px; text-align: center; color: white; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin-bottom: 40px; }
-        .hero h2 { font-size: 2.5rem; margin-bottom: 20px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
-        .hero p { font-size: 1.3rem; opacity: 0.95; }
+        .hero { 
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 25px; 
+            padding: 50px 40px; text-align: center; color: white; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin-bottom: 40px; 
+        }
+        .hero h2 { font-size: 2.5rem; margin-bottom: 20px; }
+        .hero button { 
+            background: rgba(255,255,255,0.2); border: 2px solid white; 
+            color: white; padding: 18px 40px; border-radius: 30px; 
+            font-size: 1.3rem; font-weight: 700; cursor: pointer; 
+            margin-top: 30px; backdrop-filter: blur(10px); transition: all 0.3s; 
+        }
+        .hero button:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
 
         .stats { display: flex; justify-content: center; gap: 30px; margin: 40px 0; flex-wrap: wrap; }
-        .stat-box { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 30px 25px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.15); transition: all 0.4s; min-width: 180px; }
+        .stat-box { 
+            background: rgba(255,255,255,0.95); border-radius: 20px; 
+            padding: 30px 25px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.15); 
+            transition: all 0.4s; min-width: 180px; cursor: pointer; 
+        }
         .stat-box:hover { transform: translateY(-15px) scale(1.05); box-shadow: 0 25px 60px rgba(0,0,0,0.25); }
         .stat-box h3 { color: #0056b3; font-size: 3rem; font-weight: 900; margin: 0; }
         .stat-box p { margin: 15px 0 0 0; color: #555; font-weight: 700; font-size: 1.1rem; }
+        .stat-box:active { transform: translateY(0); }
 
-        .upload-section { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 25px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-width: 700px; margin: 0 auto 40px; }
-        .koleksi-section { background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-radius: 25px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+        .upload-section { 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); 
+            border-radius: 25px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); 
+            max-width: 700px; margin: 0 auto 40px; 
+        }
+        .koleksi-section { 
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); 
+            border-radius: 25px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); 
+        }
         
         h2 { color: #0056b3; border-bottom: 5px solid #0056b3; padding-bottom: 15px; margin-bottom: 30px; font-size: 2.2rem; font-weight: 800; }
         
         label { display: block; margin: 25px 0 10px 0; font-weight: 700; color: #0056b3; font-size: 1.2rem; }
-        input, select, textarea { width: 100%; padding: 18px 20px; border: 3px solid #e9ecef; border-radius: 15px; font-size: 1.2rem; background: rgba(255,255,255,0.8); transition: all 0.4s; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #0056b3; box-shadow: 0 0 0 4px rgba(0,86,179,0.15); transform: translateY(-2px); }
+        input, select, textarea { 
+            width: 100%; padding: 18px 20px; border: 3px solid #e9ecef; 
+            border-radius: 15px; font-size: 1.2rem; background: rgba(255,255,255,0.8); 
+            transition: all 0.4s; 
+        }
+        input:focus, select:focus, textarea:focus { 
+            outline: none; border-color: #0056b3; box-shadow: 0 0 0 4px rgba(0,86,179,0.15); 
+            transform: translateY(-2px); 
+        }
         textarea { resize: vertical; min-height: 140px; }
-        button[type="submit"] { background: linear-gradient(45deg, #28a745, #20c997); color: white; border: none; padding: 22px 50px; font-size: 1.4rem; border-radius: 15px; cursor: pointer; width: 100%; font-weight: 800; margin-top: 30px; box-shadow: 0 10px 30px rgba(40,167,69,0.4); transition: all 0.4s; }
+        button[type="submit"] { 
+            background: linear-gradient(45deg, #28a745, #20c997); color: white; 
+            border: none; padding: 22px 50px; font-size: 1.4rem; border-radius: 15px; 
+            cursor: pointer; width: 100%; font-weight: 800; margin-top: 30px; 
+            box-shadow: 0 10px 30px rgba(40,167,69,0.4); transition: all 0.4s; 
+        }
         button[type="submit"]:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(40,167,69,0.6); }
+        button[type="submit"]:active { transform: translateY(0); }
 
         .collection-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 30px; margin-top: 30px; }
-        .collection-item { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 30px; box-shadow: 0 15px 50px rgba(0,0,0,0.15); transition: all 0.4s; position: relative; overflow: hidden; }
-        .collection-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #0056b3, #007bff, #0056b3); }
+        .collection-item { 
+            background: rgba(255,255,255,0.95); border-radius: 20px; padding: 30px; 
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15); transition: all 0.4s; 
+            position: relative; overflow: hidden; cursor: pointer; 
+        }
         .collection-item:hover { transform: translateY(-15px); box-shadow: 0 30px 80px rgba(0,0,0,0.25); }
+        .collection-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #0056b3, #007bff, #0056b3); }
         .collection-item h3 { color: #0056b3; margin-bottom: 15px; font-size: 1.6rem; font-weight: 800; }
         .version { background: linear-gradient(45deg, #e3f2fd, #bbdefb); color: #0056b3; padding: 8px 16px; border-radius: 25px; font-size: 0.95rem; font-weight: 700; display: inline-block; margin-bottom: 15px; }
         .collection-item img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .download-btn { width: 100%; background: linear-gradient(45deg, #28a745, #20c997); color: white; padding: 18px; border-radius: 15px; text-decoration: none; text-align: center; font-weight: 800; font-size: 1.2rem; display: block; margin-top: 20px; transition: all 0.4s; box-shadow: 0 10px 30px rgba(40,167,69,0.4); }
+        .download-btn { 
+            width: 100%; background: linear-gradient(45deg, #28a745, #20c997); color: white; 
+            padding: 18px; border-radius: 15px; text-decoration: none; text-align: center; 
+            font-weight: 800; font-size: 1.2rem; display: block; margin-top: 20px; 
+            transition: all 0.4s; box-shadow: 0 10px 30px rgba(40,167,69,0.4); 
+        }
         .download-btn:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(40,167,69,0.6); }
 
-        .status { text-align: center; padding: 20px; background: rgba(255,255,255,0.9); border-radius: 15px; margin: 20px 0; font-weight: 700; color: #28a745; display: none; }
-        .online { color: #28a745; }
-        .offline { color: #dc3545; }
+        .status { text-align: center; padding: 20px; background: rgba(255,255,255,0.9); border-radius: 15px; margin: 20px 0; font-weight: 700; color: #28a745; display: none; border-left: 5px solid #28a745; }
 
-        @media (max-width: 768px) { .collection-list { grid-template-columns: 1fr; } .stats { gap: 20px; } nav { gap: 8px; } }
+        @media (max-width: 768px) { 
+            .collection-list { grid-template-columns: 1fr; } 
+            .stats { gap: 20px; } 
+            nav { gap: 5px; padding: 10px 15px; } 
+            nav a { padding: 10px 12px; font-size: 0.9rem; }
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🌐 S4-Samp - <span id="statusText">Online</span></h1>
+        <h1>🌐 S4-Samp Krammz</h1>
         <button onclick="location.reload()" style="background: linear-gradient(45deg, #6f42c1, #007bff); color: white; border: none; padding: 12px 25px; border-radius: 25px; font-weight: 700; cursor: pointer;">🔄 Refresh</button>
     </header>
 
     <nav>
-        <a href="#" onclick="showSection('home')" class="active">🏠 Home</a>
-        <a href="#" onclick="showSection('koleksi')">📦 Koleksi Mod</a>
-        <a href="#" onclick="showSection('upload')">➕ Upload</a>
+        <a href="#" data-section="home" class="nav-link active">🏠 Home</a>
+        <a href="#" data-section="koleksi" class="nav-link">📦 Koleksi</a>
+        <a href="#" data-section="upload" class="nav-link">➕ Upload</a>
     </nav>
 
     <main>
-        <div id="connectionStatus" class="status">🔥 Terhubung ke Firebase Krammz - Sinkron real-time semua device!</div>
+        <div id="statusMsg" class="status">🔥 Loading Firebase Krammz...</div>
 
+        <!-- HOME -->
         <section id="home" class="section active">
             <div class="hero">
                 <h2>🎉 Selamat Datang!</h2>
-                <p>Mod & Script SAMP Indonesia - Sinkron Real-time</p>
-                <p style="font-size: 1.4rem; margin-top: 20px;">Upload di HP 1 → Langsung muncul di HP 2! 🚀</p>
-                <button onclick="showSection('koleksi')" style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 18px 40px; border-radius: 30px; font-size: 1.3rem; font-weight: 700; cursor: pointer; margin-top: 30px; backdrop-filter: blur(10px);">📦 Lihat Koleksi</button>
+                <p>Mod SAMP Indonesia - Sinkron Real-time</p>
+                <button onclick="goToSection('koleksi')" class="hero-btn">📦 Lihat Koleksi Mod</button>
             </div>
             <div class="stats">
-                <div class="stat-box">
+                <div class="stat-box" onclick="goToSection('koleksi')">
                     <h3 id="totalPC">0</h3>
                     <p>💻 PC Mods</p>
                 </div>
-                <div class="stat-box">
+                <div class="stat-box" onclick="goToSection('koleksi')">
                     <h3 id="totalMobile">0</h3>
                     <p>📱 Mobile</p>
                 </div>
             </div>
         </section>
 
+        <!-- KOLEKSI -->
         <section id="koleksi" class="section">
             <div class="koleksi-section">
                 <h2>📦 Koleksi Mod Real-time</h2>
-                <div class="collection-list" id="modList">
-                    <!-- Mods muncul otomatis dari Firebase -->
-                </div>
+                <div class="collection-list" id="modList"></div>
             </div>
         </section>
 
+        <!-- UPLOAD -->
         <section id="upload" class="section">
             <div class="upload-section">
-                <h2>➕ Upload Mod Baru</h2>
+                <h2>➕ Upload Mod</h2>
                 <form id="uploadForm">
                     <label for="namaMod">📝 Nama Mod</label>
-                    <input type="text" id="namaMod" placeholder="Contoh: Auto Pilot v3.0" required>
-                    
+                    <input type="text" id="namaMod" required>
                     <label for="versiMod">🔢 Versi</label>
-                    <input type="text" id="versiMod" placeholder="1.0" required>
-                    
+                    <input type="text" id="versiMod" required>
                     <label for="deskripsi">📄 Deskripsi</label>
-                    <textarea id="deskripsi" placeholder="Fitur mod kamu..."></textarea>
-                    
+                    <textarea id="deskripsi"></textarea>
                     <label for="author">👤 Author</label>
-                    <input type="text" id="author" placeholder="Nama kamu" required>
-                    
+                    <input type="text" id="author" required>
                     <label for="device">📱 Perangkat</label>
                     <select id="device">
                         <option value="PC">💻 PC</option>
                         <option value="Mobile">📱 Mobile</option>
                     </select>
-                    
                     <label for="downloadLink">🔗 Link Download</label>
-                    <input type="url" id="downloadLink" placeholder="https://mediafire.com/..." required>
-                    
-                    <label for="previewImg">🖼️ Preview (Opsional)</label>
+                    <input type="url" id="downloadLink" required>
+                    <label for="previewImg">🖼️ Preview</label>
                     <input type="file" id="previewImg" accept="image/*">
-                    
-                    <button type="submit">🚀 Upload ke Firebase</button>
+                    <button type="submit">🚀 Upload</button>
                 </form>
             </div>
         </section>
     </main>
 
-    <!-- 🔥 FIREBASE SDK + CONFIG KRAMMZ ANDA -->
     <script type="module">
-        // Import Firebase
+        // 🔥 FIREBASE KRAMMZ - FIXED NAVIGATION
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, push, onValue, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
-        // 🔥 CONFIG FIREBASE KRAMMZ ANDA
         const firebaseConfig = {
             apiKey: "AIzaSyCAqMsqFjNwjeFGujxC1hITySbz4fq63L8",
             authDomain: "krammz.firebaseapp.com",
             projectId: "krammz",
             storageBucket: "krammz.firebasestorage.app",
             messagingSenderId: "7256294488",
-            appId: "1:7256294488:web:4e18cadc3016a90e15f62d",
-            measurementId: "G-TDZ0H3WN7C"
+            appId: "1:7256294488:web:4e18cadc3016a90e15f62d"
         };
 
-        // Initialize
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const modsRef = ref(db, 's4samp-mods'); // Nama database: s4samp-mods
+        const modsRef = ref(db, 's4samp-mods');
 
-        let mods = [];
+        let allMods = [];
 
-        // 🔥 SINKRON REAL-TIME - Semua device otomatis update!
+        // 🔥 REAL-TIME SYNC
         onValue(modsRef, (snapshot) => {
             const data = snapshot.val();
-            mods = data ? Object.values(data) : [];
+            allMods = data ? Object.values(data) : [];
             renderMods();
-            updateStatus('🟢 Online - Sinkron real-time');
-        }, (error) => {
-            updateStatus('🔴 Offline');
-            console.error('Firebase error:', error);
+            document.getElementById('statusMsg').innerHTML = `🟢 <strong>${allMods.length}</strong> mod tersinkron dari Firebase!`;
+            setTimeout(() => document.getElementById('statusMsg').style.display = 'none', 3000);
         });
 
-        function updateStatus(text) {
-            document.getElementById('statusText').textContent = text.split(' ')[0];
-            document.getElementById('connectionStatus').textContent = text;
-            document.getElementById('connectionStatus').style.display = 'block';
-        }
-
-        // Render mods
         function renderMods() {
             const list = document.getElementById('modList');
             const totalPC = document.getElementById('totalPC');
             const totalMobile = document.getElementById('totalMobile');
 
-            list.innerHTML = mods.length ? '' : '<div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #666; font-size: 1.3rem;">📭 Belum ada mod. Jadilah yang pertama upload!</div>';
+            if (!allMods.length) {
+                list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#666;font-size:1.4rem;">📭 Belum ada mod<br><small>Upload yang pertama!</small></div>';
+                totalPC.textContent = totalMobile.textContent = '0';
+                return;
+            }
 
-            let pcCount = 0, mobileCount = 0;
+            list.innerHTML = '';
+            let pc = 0, mobile = 0;
 
-            mods.forEach(mod => {
+            allMods.forEach(mod => {
                 const item = document.createElement('div');
                 item.className = 'collection-item';
+                item.onclick = () => window.open(mod.link, '_blank');
 
-                if (mod.device === 'PC') pcCount++;
-                else mobileCount++;
+                if (mod.device === 'PC') pc++;
+                else mobile++;
 
                 item.innerHTML = `
                     <span class="version">${mod.version || 'v1.0'}</span>
                     <h3>${mod.name}</h3>
-                    <p style="color:#555; margin-bottom:15px;">${mod.description || 'Tidak ada deskripsi'}</p>
+                    <p style="color:#555;margin-bottom:15px;line-height:1.5;">${mod.description || 'No description'}</p>
                     <p style="font-size:1.1rem;"><strong>👤 ${mod.author}</strong> | 📱 ${mod.device}</p>
-                    ${mod.preview ? `<img src="${mod.preview}" alt="Preview">` : ''}
-                    <a href="${mod.link}" target="_blank" class="download-btn">⬇️ Download Mod</a>
+                    ${mod.preview ? `<img src="${mod.preview}" alt="Preview" loading="lazy">` : ''}
+                    <a href="${mod.link}" target="_blank" class="download-btn" style="pointer-events:auto;">⬇️ Download</a>
                 `;
                 list.appendChild(item);
             });
 
-            totalPC.textContent = pcCount;
-            totalMobile.textContent = mobileCount;
+            totalPC.textContent = pc;
+            totalMobile.textContent = mobile;
         }
 
-        // Upload form
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        // UPLOAD
+        document.getElementById('uploadForm').onsubmit = async (e) => {
             e.preventDefault();
-
-            const modData = {
+            const formData = {
                 name: document.getElementById('namaMod').value,
                 version: document.getElementById('versiMod').value,
                 description: document.getElementById('deskripsi').value,
@@ -223,33 +272,51 @@
             };
 
             const file = document.getElementById('previewImg').files[0];
-            if (file && file.size < 8 * 1024 * 1024) { // 8MB limit
+            if (file) {
+                if (file.size > 8*1024*1024) return alert('❌ Gambar max 8MB!');
                 const reader = new FileReader();
                 reader.onload = async () => {
-                    modData.preview = reader.result;
-                    await push(modsRef, modData);
+                    formData.preview = reader.result;
+                    await push(modsRef, formData);
                     e.target.reset();
-                    alert('✅ Mod berhasil di-upload! Langsung muncul di semua device!');
+                    alert('✅ UPLOAD SUKSES! Cek Koleksi Mod!');
+                    goToSection('koleksi');
                 };
                 reader.readAsDataURL(file);
             } else {
-                await push(modsRef, modData);
+                await push(modsRef, formData);
                 e.target.reset();
-                alert('✅ Mod berhasil di-upload! Langsung muncul di semua device!');
+                alert('✅ UPLOAD SUKSES! Cek Koleksi Mod!');
+                goToSection('koleksi');
             }
-        });
+        };
 
-        // Navigation
-        function showSection(id) {
+        // 🔥 FIXED NAVIGATION
+        function goToSection(sectionId) {
+            // Hide all sections
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-            event.target.classList.add('active');
+            // Show target section
+            document.getElementById(sectionId).classList.add('active');
+            // Update nav active
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
         }
 
-        // Connection status
-        window.addEventListener('online', () => updateStatus('🟢 Online - Sinkron real-time'));
-        window.addEventListener('offline', () => updateStatus('🔴 Offline'));
+        // Nav click handlers
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.onclick = (e) => {
+                e.preventDefault();
+                const section = link.getAttribute('data-section');
+                goToSection(section);
+            };
+        });
+
+        // Hero button
+        window.goToSection = goToSection;
+
+        // Online/offline
+        window.addEventListener('online', () => document.getElementById('statusMsg').innerHTML = '🟢 ONLINE');
+        window.addEventListener('offline', () => document.getElementById('statusMsg').innerHTML = '🔴 OFFLINE');
     </script>
 </body>
-                            </html>
+</html>
