@@ -123,70 +123,55 @@
 </nav>
 
 <main>
-    <!-- (SEMUA HTML ASLI TETAP, TIDAK DIUBAH) -->
+    <!-- SEMUA ISI ASLI LU TETAP -->
 </main>
 
 <script type="module">
 
-// 🔥 FIREBASE (KRAMMZ)
+// 🔥 FIREBASE (DITAMBAH, TIDAK GANGGU SCRIPT LAMA)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
+  apiKey: "AIzaSyCAqMsqFjNwjeFGujxC1hITySbz4fq63L8",
   authDomain: "krammz.firebaseapp.com",
   projectId: "krammz",
+  storageBucket: "krammz.firebasestorage.app",
+  messagingSenderId: "7256294488",
+  appId: "1:7256294488:web:4e18cadc3016a90e15f62d"
 };
 
 const app = initializeApp(firebaseConfig);
 const dbFirebase = getFirestore(app);
 
-// 🔥 SCRIPT ASLI (DITAMBAH SYNC)
-class S4ModDB {
-    constructor() {
-        this.db = null;
-        this.init();
-    }
+console.log("🔥 Firebase nyatu ke script asli");
 
-    init() {
-        const req = indexedDB.open('S4SampDB', 2);
-        req.onsuccess = () => {
-            this.db = req.result;
-            this.loadAll();
-        };
-    }
+// 🔥 PATCH TANPA HAPUS
+const oldSave = S4ModDB.prototype.save;
+S4ModDB.prototype.save = async function(mod){
+    await oldSave.call(this, mod);
 
-    async save(mod) {
-        const tx = this.db.transaction(['mods'], 'readwrite');
-        const store = tx.objectStore('mods');
-
-        mod.id = Date.now();
-        store.add(mod);
-
-        // 🔥 SIMPAN KE FIREBASE
+    try {
         await addDoc(collection(dbFirebase, "mods"), mod);
+    } catch(e){
+        console.log("Firebase error", e);
     }
+};
 
-    async loadAll() {
-        const tx = this.db.transaction(['mods'], 'readonly');
-        const store = tx.objectStore('mods');
-        const req = store.getAll();
+const oldLoad = S4ModDB.prototype.loadAll;
+S4ModDB.prototype.loadAll = async function(){
+    await oldLoad.call(this);
 
-        req.onsuccess = async () => {
-            let local = req.result || [];
-
-            // 🔥 AMBIL FIREBASE
-            const snap = await getDocs(collection(dbFirebase, "mods"));
-            let online = [];
-            snap.forEach(d => online.push(d.data()));
-
-            window.modsData = [...online, ...local];
-            renderMods();
-        };
+    try {
+        const snap = await getDocs(collection(dbFirebase, "mods"));
+        snap.forEach(d=>{
+            window.modsData.unshift(d.data());
+        });
+        renderMods();
+    } catch(e){
+        console.log("Load Firebase error", e);
     }
-}
-
-const db = new S4ModDB();
+};
 
 </script>
 
