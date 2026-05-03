@@ -1,178 +1,98 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S4-Samp - Full Script</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
-        
-        header { 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 20px; box-shadow: 0 2px 20px rgba(0,0,0,0.1); 
-            position: sticky; top: 0; z-index: 100; 
-        }
-        header h1 { color: #0056b3; font-weight: 800; font-size: 1.5rem; }
-        
-        nav { 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
-            display: flex; gap: 15px; padding: 12px 20px; overflow-x: auto; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
-        }
-        nav a { 
-            color: #333; text-decoration: none; padding: 10px 15px; 
-            border-radius: 25px; font-weight: 500; white-space: nowrap; 
-            transition: all 0.3s; 
-        }
-        nav a.active, nav a:hover { background: linear-gradient(45deg, #0056b3, #007bff); color: white; transform: translateY(-2px); }
-
-        main { padding: 25px 15px; max-width: 1200px; margin: 0 auto; }
-        
-        .section { display: none; animation: fadeIn 0.5s; }
-        .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .hero { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; border-radius: 20px; padding: 40px 30px; text-align: center; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2); margin-bottom: 30px; 
-        }
-        .hero h2 { font-size: 2.2rem; margin-bottom: 15px; }
-        .hero p { font-size: 1.2rem; opacity: 0.95; }
-
-        .stats { display: flex; justify-content: center; gap: 25px; margin: 30px 0; flex-wrap: wrap; }
-        .stat-box { 
-            background: rgba(255,255,255,0.95); border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 25px 20px; 
-            text-align: center; min-width: 160px; transition: transform 0.3s; 
-        }
-        .stat-box:hover { transform: translateY(-10px); }
-        .stat-box h3 { color: #0056b3; font-size: 2.5rem; font-weight: 800; margin: 0; }
-        .stat-box p { margin: 10px 0 0 0; color: #666; font-weight: 600; font-size: 1rem; }
-
-        .upload-section, .koleksi-section { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .upload-section { max-width: 650px; margin: 0 auto 30px; }
-        h2 { color: #0056b3; border-bottom: 4px solid #0056b3; padding-bottom: 10px; margin-bottom: 25px; font-size: 1.8rem; }
-
-        label { display: block; margin: 20px 0 8px 0; font-weight: 700; color: #0056b3; font-size: 1.1rem; }
-        input, select, textarea { 
-            width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 12px; 
-            font-size: 1.1rem; transition: all 0.3s; background: rgba(255,255,255,0.8); 
-        }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #0056b3; box-shadow: 0 0 0 3px rgba(0,86,179,0.1); }
-        textarea { resize: vertical; min-height: 120px; }
-        button[type="submit"] { 
-            background: linear-gradient(45deg, #0056b3, #007bff); color: white; 
-            border: none; padding: 18px 40px; font-size: 1.2rem; border-radius: 12px; 
-            cursor: pointer; width: 100%; font-weight: 700; margin-top: 25px; 
-            transition: transform 0.3s; 
-        }
-        button[type="submit"]:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,86,179,0.4); }
-
-        .collection-list { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); 
-            gap: 25px; margin-top: 20px; 
-        }
-        .collection-item { 
-            background: rgba(255,255,255,0.95); border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 25px; 
-            transition: all 0.4s; position: relative; overflow: hidden; 
-        }
-        .collection-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #0056b3, #007bff); }
-        .collection-item:hover { transform: translateY(-10px); box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
-        .collection-item h3 { color: #0056b3; margin-bottom: 12px; font-size: 1.4rem; }
-        .version { background: linear-gradient(45deg, #e3f2fd, #bbdefb); color: #0056b3; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
-        .collection-item img { width: 100%; height: 220px; object-fit: cover; border-radius: 12px; margin: 15px 0; }
-        .download-btn { 
-            width: 100%; background: linear-gradient(45deg, #28a745, #20c997); color: white; 
-            padding: 15px; border-radius: 12px; text-decoration: none; text-align: center; 
-            font-weight: 700; font-size: 1.1rem; display: block; margin-top: 15px; 
-            transition: all 0.3s; 
-        }
-        .download-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(40,167,69,0.4); }
-        
-        .tools { text-align: center; margin: 25px 0; padding: 20px; background: rgba(255,255,255,0.7); border-radius: 15px; }
-        .tools button, .tools label { 
-            background: linear-gradient(45deg, #6f42c1, #007bff); color: white; 
-            border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; 
-            margin: 0 10px; font-weight: 600; transition: all 0.3s; 
-        }
-        .tools button:hover, .tools label:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(111,66,193,0.4); }
-        #importFile { display: none; }
-
-        @media (max-width: 768px) { 
-            .stats { gap: 15px; } 
-            .collection-list { grid-template-columns: 1fr; }
-            nav { gap: 10px; padding: 10px 15px; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Lua Obfuscator</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      background: #020617;
+      color: #22c55e;
+      border: 1px solid #1e293b;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px;
+      background: #22c55e;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    h1 {
+      color: #38bdf8;
+    }
+  </style>
 </head>
 <body>
 
-<header>
-    <h1>🎮 S4-Samp Mod Center</h1>
-    <button onclick="location.reload()" style="background: #28a745; padding: 10px 20px; border-radius: 25px; font-weight: 700;">🔄 Refresh</button>
-</header>
+<h1>Lua Obfuscator</h1>
 
-<nav>
-    <a href="#" onclick="showSection('home')" class="active">🏠 Home</a>
-    <a href="#" onclick="showSection('koleksi')">📦 Koleksi Mod</a>
-    <a href="#" onclick="showSection('upload')">➕ Upload Mod</a>
-</nav>
+<label>Input Lua Script:</label>
+<textarea id="input"></textarea>
 
-<main>
-    <!-- SEMUA ISI ASLI LU TETAP -->
-</main>
+<button onclick="obfuscate()">Obfuscate</button>
 
-<script type="module">
+<label>Output:</label>
+<textarea id="output"></textarea>
 
-// 🔥 FIREBASE (DITAMBAH, TIDAK GANGGU SCRIPT LAMA)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<script>
+function randomName(length = 8) {
+  const chars = "abcdefghijklmnopqrstuvwxyz";
+  let result = "_";
+  for (let i = 0; i < length; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
+}
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCAqMsqFjNwjeFGujxC1hITySbz4fq63L8",
-  authDomain: "krammz.firebaseapp.com",
-  projectId: "krammz",
-  storageBucket: "krammz.firebasestorage.app",
-  messagingSenderId: "7256294488",
-  appId: "1:7256294488:web:4e18cadc3016a90e15f62d"
-};
+function encodeString(str) {
+  let encoded = "";
+  for (let i = 0; i < str.length; i++) {
+    encoded += "\\" + str.charCodeAt(i);
+  }
+  return `"${encoded}"`;
+}
 
-const app = initializeApp(firebaseConfig);
-const dbFirebase = getFirestore(app);
+function obfuscate() {
+  let code = document.getElementById("input").value;
 
-console.log("🔥 Firebase nyatu ke script asli");
-
-// 🔥 PATCH TANPA HAPUS
-const oldSave = S4ModDB.prototype.save;
-S4ModDB.prototype.save = async function(mod){
-    await oldSave.call(this, mod);
-
-    try {
-        await addDoc(collection(dbFirebase, "mods"), mod);
-    } catch(e){
-        console.log("Firebase error", e);
+  // Replace variable names (simple)
+  let varMap = {};
+  code = code.replace(/\b(local\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\b/g, function(match, local, name) {
+    if (!varMap[name] && name !== "function" && name !== "end" && name !== "if") {
+      varMap[name] = randomName();
     }
-};
+    return (local || "") + (varMap[name] || name);
+  });
 
-const oldLoad = S4ModDB.prototype.loadAll;
-S4ModDB.prototype.loadAll = async function(){
-    await oldLoad.call(this);
+  // Encode strings
+  code = code.replace(/"(.*?)"/g, function(match, str) {
+    return encodeString(str);
+  });
 
-    try {
-        const snap = await getDocs(collection(dbFirebase, "mods"));
-        snap.forEach(d=>{
-            window.modsData.unshift(d.data());
-        });
-        renderMods();
-    } catch(e){
-        console.log("Load Firebase error", e);
-    }
-};
+  // Wrap code
+  let finalCode = `
+local function _d(s)
+  local r=""
+  for i=1,#s do
+    r=r..string.char(string.byte(s,i))
+  end
+  return r
+end
 
+loadstring(${encodeString(code)})()
+`;
+
+  document.getElementById("output").value = finalCode;
+}
 </script>
 
 </body>
