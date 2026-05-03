@@ -81,56 +81,7 @@
 
     <script src="script.js"></script>
 </body>
-</html>      <div class="spinner"></div>
-                <p>Mengupload...</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Explore Modal -->
-    <div class="modal" id="exploreModal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('exploreModal')">&times;</span>
-            <h2 style="text-align: center; margin-bottom: 30px; color: #000;">Koleksi Mod <span id="liveCount">(0)</span></h2>
-            <div class="loading-spinner" id="modsSpinner">
-                <div class="spinner"></div>
-                <p>Memuat mods...</p>
-            </div>
-            <div class="mods-grid" id="modsGrid" style="display: none;">
-                <!-- Mods akan dimuat di sini -->
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let mods = [];
-        let isUploading = false;
-
-        // Initialize app
-        async function initApp() {
-            try {
-                await loadStats();
-                await loadMods();
-                document.getElementById('onlineStatus').textContent = 'Online ✅';
-            } catch (error) {
-                console.error('Firebase Error:', error);
-                document.getElementById('onlineStatus').textContent = 'Offline ⚠️';
-                document.getElementById('onlineStatus').style.color = '#ff6b6b';
-            }
-        }
-
-        // Load total stats
-        async function loadStats() {
-            const snapshot = await db.collection('mods').get();
-            const totalScriptsEl = document.getElementById('totalScripts');
-            const totalModloadersEl = document.getElementById('totalModloaders');
-            
-            totalScriptsEl.textContent = snapshot.size.toLocaleString();
-            totalModloadersEl.textContent = '89'; // Fixed number
-        }
-
-        // Load mods from Firestore
-        async function loadMods() {
+</html>        async function loadMods() {
             const grid = document.getElementById('modsGrid');
             const spinner = document.getElementById('modsSpinner');
             const countEl = document.getElementById('liveCount');
