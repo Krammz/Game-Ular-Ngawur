@@ -1,84 +1,344 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mod Loader</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S4-Samp</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+    }
+    header h1 {
+      color: #0056b3;
+      font-weight: bold;
+      margin: 0;
+      font-size: 1.3rem;
+    }
+    header button {
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 3px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .hero {
+      background-color: #0056b3;
+      color: white;
+      border-radius: 8px;
+      margin: 15px;
+      padding: 20px;
+      text-align: center;
+    }
+    .hero h2 {
+      margin: 0 0 10px 0;
+      font-size: 1.6rem;
+    }
+    .hero p {
+      margin: 5px 0;
+    }
+    .hero small {
+      font-style: italic;
+      font-weight: normal;
+      display: block;
+      margin: 8px 0 15px;
+    }
+    .hero a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 15px;
+    }
+    .stat-box {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+      width: 140px;
+      padding: 15px;
+      text-align: center;
+    }
+    .stat-box h3 {
+      margin: 0;
+      color: #0056b3;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .stat-box p {
+      margin: 5px 0 0 0;
+      font-size: 0.9rem;
+      color: #333;
+    }
+    nav {
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      gap: 20px;
+      padding: 10px 15px;
+      font-size: 0.9rem;
+    }
+    nav a {
+      color: #333;
+      text-decoration: none;
+      padding: 5px 8px;
+      border-radius: 3px;
+    }
+    nav a.active, nav a:hover {
+      background-color: #0056b3;
+      color: white;
+    }
+    main {
+      margin: 15px;
+    }
+    /* Form page */
+    form {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+    form label {
+      display: block;
+      margin-bottom: 3px;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #0056b3;
+    }
+    form input[type="text"],
+    form input[type="file"],
+    form select,
+    form textarea {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    form textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    form button {
+      margin-top: 20px;
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    /* Collection page */
+    .collection-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      max-width: 850px;
+      margin: auto;
+    }
+    .collection-item {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgb(0 0 0 / 0.1);
+      padding: 15px;
+      flex: 1 1 300px;
+      box-sizing: border-box;
+    }
+    .collection-item h3 {
+      margin: 0 0 5px 0;
+      color: #0056b3;
+    }
+    .collection-item small.version {
+      font-size: 0.75rem;
+      color: #666;
+      margin-right: 5px;
+    }
+    .collection-item p {
+      margin: 5px 0;
+      font-size: 0.9rem;
+      color: #333;
+    }
+    .collection-item button {
+      margin-top: 10px;
+      background-color: transparent;
+      border: 1px solid #0056b3;
+      color: #0056b3;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      width: 100%;
+    }
+    .collection-item button:hover {
+      background-color: #0056b3;
+      color: white;
+    }
+  </style>
 </head>
 <body>
-    <!-- Header dengan Menu Hamburger -->
-    <header>
-        <div class="header-content">
-            <h1>Mod Loader</h1>
-            <button class="menu-toggle" id="menuToggle">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+
+  <header>
+    <h1>S4-Samp</h1>
+    <button id="menuBtn">≡ Menu</button>
+  </header>
+
+  <nav>
+    <a href="#" id="navHome" class="active">Home</a>
+    <a href="#" id="navKoleksi">Koleksi Mod</a>
+    <a href="#" id="navUpload">Upload Mod</a>
+    <a href="#">Developer Terpercaya</a>
+    <a href="#">Project Developer</a>
+  </nav>
+
+  <main>
+    <section id="homeSection">
+      <div class="hero">
+        <h2>Selamat Datang di S4-Samp</h2>
+        <p>Grup Komunitas Mod & Script SAMP Indonesia</p>
+        <small><i>Share Script Sigma Samp atau lebih dikenal oleh S4 adalah grup share script yang dibuat oleh LivvSky</i></small>
+        <a href="#" onclick="showSection('koleksiSection')">Jelajahi Koleksi</a>
+      </div>
+      <div class="stats">
+        <div class="stat-box">
+          <h3 id="totalScript">2</h3>
+          <p>Total Script</p>
         </div>
-        <nav class="mobile-menu" id="mobileMenu">
-            <a href="#" class="nav-link active" data-page="home">Home</a>
-            <a href="#" class="nav-link" data-page="upload">Upload Mod</a>
-            <a href="#" class="nav-link" data-page="collection">Koleksi Mod</a>
-        </nav>
-    </header>
-
-    <!-- Main Content -->
-    <main>
-        <!-- Home Page -->
-        <section id="home" class="page active">
-            <div class="stats-container">
-                <div class="stat-box">
-                    <div class="stat-number" id="totalScripts">0</div>
-                    <div class="stat-label">Total Scripts</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number" id="totalModloader">0</div>
-                    <div class="stat-label">Total Modloader</div>
-                </div>
-            </div>
-            <div class="explore-button">
-                <button id="exploreBtn">Jelajahi Koleksi</button>
-            </div>
-        </section>
-
-        <!-- Upload Mod Page -->
-        <section id="upload" class="page">
-            <div class="upload-container">
-                <h2>Upload Mod Lua</h2>
-                <div class="upload-area" id="uploadArea">
-                    <input type="file" id="fileInput" accept=".lua" style="display: none;">
-                    <div class="upload-placeholder">
-                        <p>Klik atau drag & drop file .lua</p>
-                    </div>
-                </div>
-                <button id="uploadBtn" class="upload-button">Upload Mod</button>
-                <p id="uploadStatus"></p>
-            </div>
-        </section>
-
-        <!-- Koleksi Mod Page -->
-        <section id="collection" class="page">
-            <div class="collection-container">
-                <h2>Koleksi Mod</h2>
-                <div id="modsList" class="mods-grid">
-                    <!-- Mods akan dimuat di sini -->
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Download Modal -->
-    <div id="downloadModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>Download Mod</h3>
-            <div id="modalContent"></div>
-            <a id="downloadLink" class="download-btn" href="#" download>Download File</a>
+        <div class="stat-box">
+          <h3 id="totalModloader">0</h3>
+          <p>Total Modloader</p>
         </div>
-    </div>
+      </div>
+    </section>
 
-    <script src="script.js"></script>
+    <section id="uploadSection" style="display:none;">
+      <h2 style="color:#0056b3; border-bottom: 2px solid #0056b3; padding-bottom: 5px; max-width: 200px;">Upload Mod Anda</h2>
+      <form id="uploadForm">
+        <label for="namaMod">Nama Mod / Script</label>
+        <input type="text" id="namaMod" name="namaMod" placeholder="Contoh: Auto Pilot" required />
+
+        <label for="versiMod">Versi Mod</label>
+        <input type="text" id="versiMod" name="versiMod" placeholder="Contoh: 1.0" required />
+
+        <label for="deskripsiMod">Deskripsi Mod (Fitur dll)</label>
+        <textarea id="deskripsiMod" name="deskripsiMod" placeholder="Jelaskan fitur mod..." required></textarea>
+
+        <label for="aktivasiMod">Aktivasi Mod</label>
+        <select id="aktivasiMod" name="aktivasiMod" required>
+          <option value="Auto Aktif">Auto Aktif</option>
+          <option value="Manual">Manual</option>
+        </select>
+
+        <label for="authorMod">Author Mod (Nama Anda)</label>
+        <input type="text" id="authorMod" name="authorMod" placeholder="Nama pembuat" required />
+
+        <label for="perangkatMod">Perangkat Mod</label>
+        <select id="perangkatMod" name="perangkatMod" required>
+          <option value="PC">PC</option>
+          <option value="Mobile">Mobile</option>
+        </select>
+
+        <label for="linkDownload">Link Download Mod</label>
+        <input type="text" id="linkDownload" name="linkDownload" placeholder="Link Mediafire / GDrive / GitHub" required />
+
+        <label for="uploadGambar">Upload Gambar / Preview (Maks 8MB)</label>
+        <input type="file" id="uploadGambar" name="uploadGambar" accept="image/*" />
+
+        <button type="submit">Kirim mod anda</button>
+      </form>
+    </section>
+
+    <section id="koleksiSection" style="display:none;">
+      <h2 style="color:#0056b3; border-bottom: 2px solid #0056b3; padding-bottom: 5px; max-width: 250px;">Koleksi Mod & Monetioader</h2>
+      <div class="collection-list" id="collectionList">
+        <!-- Contoh item -->
+        <div class="collection-item">
+          <small class="version">v1.0</small>
+          <h3>Sehat walafiat</h3>
+          <p>Monetloader yang bisa membuat anda dan kendaraan anda kebal!</p>
+          <p><strong>Author:</strong> LivvSky</p>
+          <button>Lihat Detail</button>
+        </div>
+        <div class="collection-item">
+          <small class="version">v1.0</small>
+          <h3>S4 Spawn Car</h3>
+          <p>Monetloader yang bisa memspawn kendaraan anda secara visual!</p>
+          <p><strong>Author:</strong> LivvSky</p>
+          <button>Lihat Detail</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Navigasi antar section
+    const navHome = document.getElementById("navHome");
+    const navKoleksi = document.getElementById("navKoleksi");
+    const navUpload = document.getElementById("navUpload");
+    const homeSection = document.getElementById("homeSection");
+    const uploadSection = document.getElementById("uploadSection");
+    const koleksiSection = document.getElementById("koleksiSection");
+
+    function showSection(section) {
+      homeSection.style.display = "none";
+      uploadSection.style.display = "none";
+      koleksiSection.style.display = "none";
+
+      navHome.classList.remove("active");
+      navKoleksi.classList.remove("active");
+      navUpload.classList.remove("active");
+
+      if (section === "homeSection") {
+        homeSection.style.display = "block";
+        navHome.classList.add("active");
+      } else if (section === "uploadSection") {
+        uploadSection.style.display = "block";
+        navUpload.classList.add("active");
+      } else if (section === "koleksiSection") {
+        koleksiSection.style.display = "block";
+        navKoleksi.classList.add("active");
+      }
+    }
+
+    navHome.addEventListener("click", (e) => {
+      e.preventDefault();
+      showSection("homeSection");
+    });
+    navKoleksi.addEventListener("click", (e) => {
+      e.preventDefault();
+      showSection("koleksiSection");
+    });
+    navUpload.addEventListener("click", (e) => {
+      e.preventDefault();
+      showSection("uploadSection");
+    });
+
+    // Contoh event form submit 
+    const form = document.getElementById("uploadForm");
+    form.addEventListener("submit", function(event) {
+      event.preventDefault();
+      alert("Mod berhasil dikirim! (Simulasi, belum ada backend)");
+      form.reset();
+      showSection("homeSection");
+    });
+  </script>
 </body>
-    </html>
+                                                 </html>
