@@ -3,76 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S4-Samp - Krammz Firebase FIXED</title>
+    <title>Krammz Mod Center</title>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
+
         header { 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 20px; box-shadow: 0 4px 30px rgba(0,0,0,0.2); 
-            position: sticky; top: 0; z-index: 100; 
+            background: rgba(255,255,255,0.95);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
         }
-        header h1 { color: #0056b3; font-weight: 800; font-size: 1.6rem; }
-        nav { 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); 
-            display: flex; gap: 10px; padding: 12px 20px; overflow-x: auto; 
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1); 
-        }
-        nav a { 
-            color: #333 !important; text-decoration: none; padding: 12px 18px; 
-            border-radius: 25px; font-weight: 600; white-space: nowrap; 
-            transition: all 0.3s; cursor: pointer; 
-        }
-        nav a.active, nav a:hover { 
-            background: linear-gradient(45deg, #0056b3, #007bff) !important; 
-            color: white !important; box-shadow: 0 5px 15px rgba(0,86,179,0.4); 
-        }
-        
-        main { padding: 30px 20px; max-width: 1300px; margin: 0 auto; }
-        .section { display: none !important; }
-        .section.active { display: block !important; animation: slideIn 0.5s; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        .hero { 
-            background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 25px; 
-            padding: 50px 40px; text-align: center; color: white; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin-bottom: 40px; 
-        }
-        .hero h2 { font-size: 2.5rem; margin-bottom: 20px; }
-        .hero button { 
-            background: rgba(255,255,255,0.2); border: 2px solid white; 
-            color: white; padding: 18px 40px; border-radius: 30px; 
-            font-size: 1.3rem; font-weight: 700; cursor: pointer; 
-            margin-top: 30px; backdrop-filter: blur(10px); transition: all 0.3s; 
-        }
-        .hero button:hover { background: rgba(255,255,255,0.3); transform: scale(1.05); }
+        header h1 { color: #0056b3; font-weight: 800; }
 
-        .stats { display: flex; justify-content: center; gap: 30px; margin: 40px 0; flex-wrap: wrap; }
-        .stat-box { 
-            background: rgba(255,255,255,0.95); border-radius: 20px; 
-            padding: 30px 25px; text-align: center; box-shadow: 0 15px 40px rgba(0,0,0,0.15); 
-            transition: all 0.4s; min-width: 180px; cursor: pointer; 
+        nav {
+            display: flex; gap: 10px; padding: 10px;
+            background: white;
         }
-        .stat-box:hover { transform: translateY(-15px) scale(1.05); box-shadow: 0 25px 60px rgba(0,0,0,0.25); }
-        .stat-box h3 { color: #0056b3; font-size: 3rem; font-weight: 900; margin: 0; }
-        .stat-box p { margin: 15px 0 0 0; color: #555; font-weight: 700; font-size: 1.1rem; }
-        .stat-box:active { transform: translateY(0); }
 
-        .upload-section { 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); 
-            border-radius: 25px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); 
-            max-width: 700px; margin: 0 auto 40px; 
+        nav a {
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: #333;
         }
-        .koleksi-section { 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); 
-            border-radius: 25px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); 
+
+        nav a.active { background: #007bff; color: white; }
+
+        main { padding: 20px; }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
         }
-        
-        h2 { color: #0056b3; border-bottom: 5px solid #0056b3; padding-bottom: 15px; margin-bottom: 30px; font-size: 2.2rem; font-weight: 800; }
-        
-        label { display: block; margin: 25px 0 10px 0; font-weight: 700; color: #0056b3; font-size: 1.2rem; }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 12px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .item {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>🔥 Krammz Mod Center</h1>
+    <button onclick="location.reload()">Refresh</button>
+</header>
+
+<nav>
+    <a href="#" onclick="show('home')" class="active">Home</a>
+    <a href="#" onclick="show('koleksi')">Koleksi</a>
+    <a href="#" onclick="show('upload')">Upload</a>
+</nav>
+
+<main>
+
+<section id="home" class="section active">
+    <div class="box">
+        <h2>🚀 Selamat Datang di Krammz</h2>
+        <p>Tempat share mod SAMP</p>
+    </div>
+</section>
+
+<section id="koleksi" class="section">
+    <div class="box">
+        <h2>Koleksi Mod</h2>
+        <div id="list"></div>
+    </div>
+</section>
+
+<section id="upload" class="section">
+    <div class="box">
+        <h2>Upload Mod</h2>
+
+        <form id="form">
+            <input id="nama" placeholder="Nama Mod" required>
+            <input id="versi" placeholder="Versi" required>
+            <textarea id="desk" placeholder="Deskripsi"></textarea>
+            <input id="author" placeholder="Author" required>
+            <input id="link" placeholder="Link Download" required>
+            <button type="submit">Upload</button>
+        </form>
+
+    </div>
+</section>
+
+</main>
+
+<script type="module">
+
+// 🔥 FIREBASE KRAMMZ
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCAqMsqFjNwjeFGujxC1hITySbz4fq63L8",
+    authDomain: "krammz.firebaseapp.com",
+    projectId: "krammz",
+    storageBucket: "krammz.firebasestorage.app",
+    messagingSenderId: "7256294488",
+    appId: "1:7256294488:web:4e18cadc3016a90e15f62d",
+    measurementId: "G-TDZ0H3WN7C"
+};
+
+const app = initializeApp(firebaseConfig);
+getAnalytics(app);
+
+console.log("Firebase aktif");
+
+// 🔥 DATABASE LOCAL (IndexedDB)
+let data = JSON.parse(localStorage.getItem("krammz") || "[]");
+
+// NAV
+window.show = function(id){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// RENDER
+function render(){
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.reverse().forEach((mod,i)=>{
+        list.innerHTML += `
+            <div class="item">
+                <h3>${mod.nama} (v${mod.versi})</h3>
+                <p>${mod.desk || '-'}</p>
+                <p><b>${mod.author}</b></p>
+                <a href="${mod.link}" target="_blank">Download</a>
+                <br><br>
+                <button onclick="hapus(${i})">Hapus</button>
+            </div>
+        `;
+    });
+}
+
+window.hapus = function(i){
+    data.splice(i,1);
+    localStorage.setItem("krammz", JSON.stringify(data));
+    render();
+}
+
+// FORM
+document.getElementById("form").onsubmit = function(e){
+    e.preventDefault();
+
+    const mod = {
+        nama: nama.value,
+        versi: versi.value,
+        desk: desk.value,
+        author: author.value,
+        link: link.value
+    };
+
+    data.push(mod);
+    localStorage.setItem("krammz", JSON.stringify(data));
+
+    alert("Upload berhasil!");
+    this.reset();
+    render();
+};
+
+// INIT
+render();
+
+</script>
+
+</body>
+</html>        label { display: block; margin: 25px 0 10px 0; font-weight: 700; color: #0056b3; font-size: 1.2rem; }
         input, select, textarea { 
             width: 100%; padding: 18px 20px; border: 3px solid #e9ecef; 
             border-radius: 15px; font-size: 1.2rem; background: rgba(255,255,255,0.8); 
