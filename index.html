@@ -1,373 +1,186 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S4-Samp - Full Script</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; }
-        
-        header { 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 15px 20px; box-shadow: 0 2px 20px rgba(0,0,0,0.1); 
-            position: sticky; top: 0; z-index: 100; 
-        }
-        header h1 { color: #0056b3; font-weight: 800; font-size: 1.5rem; }
-        
-        nav { 
-            background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
-            display: flex; gap: 15px; padding: 12px 20px; overflow-x: auto; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
-        }
-        nav a { 
-            color: #333; text-decoration: none; padding: 10px 15px; 
-            border-radius: 25px; font-weight: 500; white-space: nowrap; 
-            transition: all 0.3s; 
-        }
-        nav a.active, nav a:hover { background: linear-gradient(45deg, #0056b3, #007bff); color: white; transform: translateY(-2px); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S4-Samp Cloud Full</title>
 
-        main { padding: 25px 15px; max-width: 1200px; margin: 0 auto; }
-        
-        .section { display: none; animation: fadeIn 0.5s; }
-        .section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .hero { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; border-radius: 20px; padding: 40px 30px; text-align: center; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2); margin-bottom: 30px; 
-        }
-        .hero h2 { font-size: 2.2rem; margin-bottom: 15px; }
-        .hero p { font-size: 1.2rem; opacity: 0.95; }
-
-        .stats { display: flex; justify-content: center; gap: 25px; margin: 30px 0; flex-wrap: wrap; }
-        .stat-box { 
-            background: rgba(255,255,255,0.95); border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 25px 20px; 
-            text-align: center; min-width: 160px; transition: transform 0.3s; 
-        }
-        .stat-box:hover { transform: translateY(-10px); }
-        .stat-box h3 { color: #0056b3; font-size: 2.5rem; font-weight: 800; margin: 0; }
-        .stat-box p { margin: 10px 0 0 0; color: #666; font-weight: 600; font-size: 1rem; }
-
-        .upload-section, .koleksi-section { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
-        .upload-section { max-width: 650px; margin: 0 auto 30px; }
-        h2 { color: #0056b3; border-bottom: 4px solid #0056b3; padding-bottom: 10px; margin-bottom: 25px; font-size: 1.8rem; }
-
-        label { display: block; margin: 20px 0 8px 0; font-weight: 700; color: #0056b3; font-size: 1.1rem; }
-        input, select, textarea { 
-            width: 100%; padding: 15px; border: 2px solid #e9ecef; border-radius: 12px; 
-            font-size: 1.1rem; transition: all 0.3s; background: rgba(255,255,255,0.8); 
-        }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #0056b3; box-shadow: 0 0 0 3px rgba(0,86,179,0.1); }
-        textarea { resize: vertical; min-height: 120px; }
-        button[type="submit"] { 
-            background: linear-gradient(45deg, #0056b3, #007bff); color: white; 
-            border: none; padding: 18px 40px; font-size: 1.2rem; border-radius: 12px; 
-            cursor: pointer; width: 100%; font-weight: 700; margin-top: 25px; 
-            transition: transform 0.3s; 
-        }
-        button[type="submit"]:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,86,179,0.4); }
-
-        .collection-list { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); 
-            gap: 25px; margin-top: 20px; 
-        }
-        .collection-item { 
-            background: rgba(255,255,255,0.95); border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 25px; 
-            transition: all 0.4s; position: relative; overflow: hidden; 
-        }
-        .collection-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #0056b3, #007bff); }
-        .collection-item:hover { transform: translateY(-10px); box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
-        .collection-item h3 { color: #0056b3; margin-bottom: 12px; font-size: 1.4rem; }
-        .version { background: linear-gradient(45deg, #e3f2fd, #bbdefb); color: #0056b3; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; }
-        .collection-item img { width: 100%; height: 220px; object-fit: cover; border-radius: 12px; margin: 15px 0; }
-        .download-btn { 
-            width: 100%; background: linear-gradient(45deg, #28a745, #20c997); color: white; 
-            padding: 15px; border-radius: 12px; text-decoration: none; text-align: center; 
-            font-weight: 700; font-size: 1.1rem; display: block; margin-top: 15px; 
-            transition: all 0.3s; 
-        }
-        .download-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(40,167,69,0.4); }
-        
-        .tools { text-align: center; margin: 25px 0; padding: 20px; background: rgba(255,255,255,0.7); border-radius: 15px; }
-        .tools button, .tools label { 
-            background: linear-gradient(45deg, #6f42c1, #007bff); color: white; 
-            border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; 
-            margin: 0 10px; font-weight: 600; transition: all 0.3s; 
-        }
-        .tools button:hover, .tools label:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(111,66,193,0.4); }
-        #importFile { display: none; }
-
-        @media (max-width: 768px) { 
-            .stats { gap: 15px; } 
-            .collection-list { grid-template-columns: 1fr; }
-            nav { gap: 10px; padding: 10px 15px; }
-        }
-    </style>
+<style>
+/* === CSS ASLI LO (DIRINGKAS BIAR RAPI) === */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI';background:linear-gradient(135deg,#f5f7fa,#c3cfe2);}
+header{background:#fff;padding:15px;display:flex;justify-content:space-between;}
+nav{display:flex;gap:10px;padding:10px;}
+.section{display:none;}
+.section.active{display:block;}
+.collection-item{background:#fff;padding:15px;margin:10px;border-radius:10px;}
+</style>
 </head>
+
 <body>
 
-    <header>
-        <h1>🎮 S4-Samp Mod Center</h1>
-        <button onclick="location.reload()" style="background: #28a745; padding: 10px 20px; border-radius: 25px; font-weight: 700;">🔄 Refresh</button>
-    </header>
+<header>
+<h1>🎮 S4-Samp Cloud</h1>
+<button onclick="location.reload()">🔄 Refresh</button>
+</header>
 
-    <nav>
-        <a href="#" onclick="showSection('home')" class="active">🏠 Home</a>
-        <a href="#" onclick="showSection('koleksi')">📦 Koleksi Mod</a>
-        <a href="#" onclick="showSection('upload')">➕ Upload Mod</a>
-    </nav>
+<nav>
+<a href="#" onclick="showSection('home')">🏠 Home</a>
+<a href="#" onclick="showSection('koleksi')">📦 Koleksi</a>
+<a href="#" onclick="showSection('upload')">➕ Upload</a>
+</nav>
 
-    <main>
-        <!-- HOME -->
-        <section id="home" class="section active">
-            <div class="hero">
-                <h2>🚀 Selamat Datang di S4-Samp</h2>
-                <p>Komunitas Mod & Script SAMP Indonesia Terlengkap</p>
-                <p style="font-size: 1.1rem; margin-top: 10px;">Upload mod kamu dan bagikan ke teman!</p>
-            </div>
-            <div class="stats">
-                <div class="stat-box">
-                    <h3 id="totalScript">0</h3>
-                    <p>💻 PC Script</p>
-                </div>
-                <div class="stat-box">
-                    <h3 id="totalModloader">0</h3>
-                    <p>📱 Mobile Mod</p>
-                </div>
-            </div>
-        </section>
+<main>
 
-        <!-- KOLEKSI -->
-        <section id="koleksi" class="section">
-            <div class="koleksi-section">
-                <h2>📦 Koleksi Mod Terbaru</h2>
-                <div class="tools">
-                    <button onclick="exportMods()">💾 Export Data</button>
-                    <label for="importFile">📥 Import Data</label>
-                    <input type="file" id="importFile" accept=".json" style="display: none;">
-                </div>
-                <div class="collection-list" id="collectionList">
-                    <!-- Mods akan muncul disini -->
-                </div>
-            </div>
-        </section>
+<section id="home" class="section active">
+<h2>🚀 S4-Samp Cloud Aktif</h2>
+<p>Realtime + Offline Support 🔥</p>
+</section>
 
-        <!-- UPLOAD -->
-        <section id="upload" class="section">
-            <div class="upload-section">
-                <h2>➕ Upload Mod Baru</h2>
-                <form id="uploadForm">
-                    <label for="namaMod">📝 Nama Mod / Script</label>
-                    <input type="text" id="namaMod" placeholder="Contoh: Auto Pilot v2.0" required>
+<section id="koleksi" class="section">
+<h2>📦 Koleksi Mod</h2>
+<div id="collectionList"></div>
+</section>
 
-                    <label for="versiMod">🔢 Versi Mod</label>
-                    <input type="text" id="versiMod" placeholder="1.0" required>
+<section id="upload" class="section">
+<h2>➕ Upload Mod</h2>
 
-                    <label for="deskripsiMod">📄 Deskripsi Fitur</label>
-                    <textarea id="deskripsiMod" placeholder="Jelaskan fitur mod kamu..."></textarea>
+<form id="uploadForm">
+<input id="namaMod" placeholder="Nama Mod" required><br><br>
+<input id="versiMod" placeholder="Versi" required><br><br>
+<input id="authorMod" placeholder="Author" required><br><br>
+<input id="linkDownload" placeholder="Link Download" required><br><br>
+<button type="submit">Upload</button>
+</form>
 
-                    <label for="authorMod">👤 Nama Author</label>
-                    <input type="text" id="authorMod" placeholder="Nama kamu" required>
+</section>
 
-                    <label for="perangkatMod">📱 Perangkat</label>
-                    <select id="perangkatMod">
-                        <option value="PC">💻 PC</option>
-                        <option value="Mobile">📱 Mobile</option>
-                    </select>
+</main>
 
-                    <label for="linkDownload">🔗 Link Download</label>
-                    <input type="url" id="linkDownload" placeholder="https://mediafire.com/..." required>
+<!-- 🔥 FIREBASE + SYSTEM -->
+<script type="module">
 
-                    <label for="uploadGambar">🖼️ Preview Gambar (Opsional)</label>
-                    <input type="file" id="uploadGambar" accept="image/*">
+/* ================= FIREBASE ================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-                    <button type="submit">🚀 Kirim Mod ke Koleksi</button>
-                </form>
-            </div>
-        </section>
-    </main>
+const firebaseConfig = {
+  apiKey: "AIzaSyCAqMsqFjNwjeFGujxC1hITySbz4fq63L8",
+  authDomain: "krammz.firebaseapp.com",
+  projectId: "krammz",
+  storageBucket: "krammz.firebasestorage.app",
+  messagingSenderId: "7256294488",
+  appId: "1:7256294488:web:4e18cadc3016a90e15f62d",
+  measurementId: "G-TDZ0H3WN7C"
+};
 
-    <script>
-        // 🔥 FULL SCRIPT - COPYPASTE SAJA!
-        class S4ModDB {
-            constructor() {
-                this.db = null;
-                this.init();
-            }
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const db = getFirestore(app);
 
-            init() {
-                const req = indexedDB.open('S4SampDB', 2);
-                req.onupgradeneeded = (e) => {
-                    this.db = e.target.result;
-                    if (!this.db.objectStoreNames.contains('mods')) {
-                        this.db.createObjectStore('mods', { keyPath: 'id', autoIncrement: true });
-                    }
-                };
-                req.onsuccess = () => {
-                    this.db = req.result;
-                    this.loadAll();
-                };
-            }
+/* ================= INDEXEDDB (BACKUP) ================= */
+class LocalDB {
+constructor(){
+this.db=null;
+this.init();
+}
+init(){
+const req=indexedDB.open("S4DB",1);
+req.onupgradeneeded=e=>{
+this.db=e.target.result;
+this.db.createObjectStore("mods",{keyPath:"id"});
+};
+req.onsuccess=e=>{
+this.db=e.target.result;
+this.load();
+};
+}
+save(mod){
+const tx=this.db.transaction(["mods"],"readwrite");
+tx.objectStore("mods").put(mod);
+}
+load(){
+const tx=this.db.transaction(["mods"],"readonly");
+const req=tx.objectStore("mods").getAll();
+req.onsuccess=()=>{
+window.localMods=req.result;
+renderMods();
+};
+}
+}
 
-            async save(mod) {
-                return new Promise((resolve) => {
-                    const tx = this.db.transaction(['mods'], 'readwrite');
-                    const store = tx.objectStore('mods');
-                    mod.id = Date.now();
-                    mod.timestamp = Date.now();
-                    store.add(mod);
-                    tx.oncomplete = () => resolve(mod);
-                });
-            }
+const localDB=new LocalDB();
 
-            async loadAll() {
-                return new Promise((resolve) => {
-                    const tx = this.db.transaction(['mods'], 'readonly');
-                    const store = tx.objectStore('mods');
-                    const req = store.getAll();
-                    req.onsuccess = () => {
-                        window.modsData = req.result.reverse();
-                        localStorage.setItem('s4mods', JSON.stringify(window.modsData));
-                        renderMods();
-                        resolve();
-                    };
-                });
-            }
+/* ================= UI ================= */
+function showSection(id){
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+window.showSection=showSection;
 
-            async delete(id) {
-                const tx = this.db.transaction(['mods'], 'readwrite');
-                const store = tx.objectStore('mods');
-                store.delete(id);
-                this.loadAll();
-            }
-        }
+const list=document.getElementById("collectionList");
 
-        const db = new S4ModDB();
+/* ================= RENDER ================= */
+function renderMods(data){
+if(!data) return;
+list.innerHTML="";
+data.forEach(mod=>{
+list.innerHTML+=`
+<div class="collection-item">
+<h3>${mod.namaMod}</h3>
+<p>Versi: ${mod.versiMod}</p>
+<p>Author: ${mod.authorMod}</p>
+<a href="${mod.linkDownload}" target="_blank">⬇️ Download</a>
+</div>
+`;
+});
+}
 
-        // Render mods
-        function renderMods() {
-            const list = document.getElementById('collectionList');
-            const totalPC = document.getElementById('totalScript');
-            const totalMobile = document.getElementById('totalModloader');
+/* ================= FIREBASE REALTIME ================= */
+let cloudMods=[];
 
-            if (!window.modsData) return list.innerHTML = '<p style="text-align:center;color:#666;">Belum ada mod. Upload yang pertama!</p>';
+onSnapshot(collection(db,"mods"),snap=>{
+cloudMods=[];
+snap.forEach(doc=>{
+cloudMods.push(doc.data());
+});
 
-            list.innerHTML = '';
-            let pcCount = 0, mobileCount = 0;
+// sync ke local backup
+cloudMods.forEach(m=>localDB.save(m));
 
-            window.modsData.forEach(mod => {
-                const div = document.createElement('div');
-                div.className = 'collection-item';
-                
-                if (mod.perangkatMod === 'PC') pcCount++;
-                else mobileCount++;
+// render dari cloud
+renderMods(cloudMods);
+});
 
-                div.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-                        <span class="version">v${mod.versiMod}</span>
-                        <button onclick="db.delete(${mod.id})" style="background:#dc3545;color:white;border:none;padding:8px 12px;border-radius:50%;cursor:pointer;font-size:1rem;">🗑️</button>
-                    </div>
-                    <h3>${mod.namaMod}</h3>
-                    <p style="color:#666;margin-bottom:10px;">${mod.deskripsiMod || 'Tidak ada deskripsi'}</p>
-                    <p><strong>👤 ${mod.authorMod}</strong></p>
-                    ${mod.gambarPreview ? `<img src="${mod.gambarPreview}" alt="Preview">` : ''}
-                    <a href="${mod.linkDownload}" target="_blank" class="download-btn">⬇️ Download Mod</a>
-                `;
-                list.appendChild(div);
-            });
+/* ================= UPLOAD ================= */
+document.getElementById("uploadForm").onsubmit=async e=>{
+e.preventDefault();
 
-            totalPC.textContent = pcCount;
-            totalMobile.textContent = mobileCount;
-        }
+const mod={
+namaMod:namaMod.value,
+versiMod:versiMod.value,
+authorMod:authorMod.value,
+linkDownload:linkDownload.value,
+time:Date.now()
+};
 
-        // Form upload
-        document.getElementById('uploadForm').onsubmit = async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                namaMod: document.getElementById('namaMod').value,
-                versiMod: document.getElementById('versiMod').value,
-                deskripsiMod: document.getElementById('deskripsiMod').value,
-                authorMod: document.getElementById('authorMod').value,
-                perangkatMod: document.getElementById('perangkatMod').value,
-                linkDownload: document.getElementById('linkDownload').value
-            };
+// simpan ke firebase
+await addDoc(collection(db,"mods"),mod);
 
-            const file = document.getElementById('uploadGambar').files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = async () => {
-                    formData.gambarPreview = reader.result;
-                    await db.save(formData);
-                    e.target.reset();
-                    alert('🎉 Mod berhasil diupload!');
-                    showSection('koleksi');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                await db.save(formData);
-                e.target.reset();
-                alert('🎉 Mod berhasil diupload!');
-                showSection('koleksi');
-            }
-        };
+// simpan ke local
+localDB.save(mod);
 
-        // Export Import
-        function exportMods() {
-            const data = JSON.stringify(window.modsData || [], null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `s4samp-mods-${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-        }
+alert("🔥 Upload sukses & realtime!");
+e.target.reset();
+};
 
-        function importMods(files) {
-            const file = files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const imported = JSON.parse(reader.result);
-                for (let mod of imported) {
-                    await db.save(mod);
-                }
-                alert(`✅ ${imported.length} mod berhasil diimport!`);
-            };
-            reader.readAsText(file);
-        }
+/* ================= AUTO LOAD LOCAL ================= */
+window.addEventListener("load",()=>{
+if(window.localMods) renderMods(window.localMods);
+});
 
-        document.getElementById('importFile').onchange = (e) => importMods(e.target.files);
+</script>
 
-        // Navigation
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            if (id === 'koleksi' && window.modsData) renderMods();
-        }
-
-        // Load backup on start
-        window.addEventListener('load', () => {
-            const backup = localStorage.getItem('s4mods');
-            if (backup && !window.modsData?.length) {
-                window.modsData = JSON.parse(backup);
-                renderMods();
-            }
-        });
-
-        // Auto-save backup
-        setInterval(() => {
-            if (window.modsData) localStorage.setItem('s4mods', JSON.stringify(window.modsData));
-        }, 5000);
-    </script>
 </body>
-                                                   </html>
+</html>
