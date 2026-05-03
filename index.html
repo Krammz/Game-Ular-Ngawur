@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>KrammzLuaa Anomaly Obfuscator</title>
+<title>KrammzLuaa</title>
 
 <style>
 body{
@@ -13,7 +13,6 @@ body{
   overflow:hidden;
 }
 
-/* Canvas background */
 canvas{
   position:fixed;
   top:0;
@@ -21,10 +20,44 @@ canvas{
   z-index:-1;
 }
 
-/* UI */
-.container{
-  position:relative;
+/* NAVBAR */
+.menu-btn{
+  position:fixed;
+  top:15px;
+  left:15px;
+  font-size:25px;
+  cursor:pointer;
+  z-index:1000;
+}
+
+.sidebar{
+  position:fixed;
+  top:0;
+  left:-220px;
+  width:200px;
+  height:100%;
+  background:#020617;
+  border-right:1px solid #1e293b;
   padding:20px;
+  transition:0.3s;
+  z-index:999;
+}
+
+.sidebar a{
+  display:block;
+  margin:15px 0;
+  cursor:pointer;
+  color:#22c55e;
+}
+
+/* PAGE */
+.page{
+  display:none;
+  padding:70px 20px 20px;
+}
+
+.active{
+  display:block;
 }
 
 textarea{
@@ -56,23 +89,171 @@ h1{
 
 <canvas id="matrix"></canvas>
 
-<div class="container">
-<h1>KrammzLuaa Anomaly 🔮</h1>
+<div class="menu-btn" onclick="toggleMenu()">☰</div>
 
-<textarea id="input" placeholder="Paste Lua script..."></textarea>
+<div class="sidebar" id="sidebar">
+  <a onclick="showPage('home')">Home</a>
+  <a onclick="showPage('obf')">Obfuscator</a>
+</div>
 
-<button onclick="obfuscate()">Obfuscate</button>
-<button onclick="copyOut()">Copy</button>
-<button onclick="download()">Download</button>
+<!-- HOME PAGE -->
+<div id="home" class="page active">
+  <h1>Welcome 👋</h1>
+  <p>Selamat datang di <b>KrammzLuaa Obfuscator</b></p>
+  <p>Tool ini dibuat untuk mengacak script Lua agar sulit dibaca 🔒</p>
+</div>
 
-<textarea id="output"></textarea>
+<!-- OBFUSCATOR PAGE -->
+<div id="obf" class="page">
+  <h1>KrammzLuaa Obfuscator 🔮</h1>
+
+  <textarea id="input" placeholder="Paste Lua script..."></textarea>
+
+  <button onclick="obfuscate()">Obfuscate</button>
+  <button onclick="copyOut()">Copy</button>
+  <button onclick="download()">Download</button>
+
+  <textarea id="output"></textarea>
 </div>
 
 <script>
-// ===== MATRIX EFFECT =====
-const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
+// ===== MENU =====
+function toggleMenu(){
+  let s=document.getElementById("sidebar");
+  s.style.left = (s.style.left==="0px") ? "-220px" : "0px";
+}
 
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+// ===== MATRIX =====
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+const chars="01ABCDEFGHIJKLMNOPQRSTUVWXYZ#$%^&*";
+const size=14;
+const cols=canvas.width/size;
+const drops=[];
+
+for(let i=0;i<cols;i++) drops[i]=1;
+
+function draw(){
+  ctx.fillStyle="rgba(2,6,23,0.05)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle="#22c55e";
+  ctx.font=size+"px monospace";
+
+  for(let i=0;i<drops.length;i++){
+    let text=chars[Math.floor(Math.random()*chars.length)];
+    ctx.fillText(text,i*size,drops[i]*size);
+
+    if(drops[i]*size>canvas.height && Math.random()>0.975){
+      drops[i]=0;
+    }
+    drops[i]++;
+  }
+}
+
+setInterval(draw,33);
+
+window.addEventListener("resize",()=>{
+  canvas.width=window.innerWidth;
+  canvas.height=window.innerHeight;
+});
+
+// ===== OBFUSCATOR =====
+function anomalyName(){
+  const c=["𓂀","Ω","Ξ","λ","Ж","Ҡ","ψ","ζ","Δ","☠","✶","✦"];
+  let r="_";
+  for(let i=0;i<6;i++){
+    r+=c[Math.floor(Math.random()*c.length)];
+  }
+  return r;
+}
+
+function encode(str){
+  return str.split("").map(c=>"\\\\"+c.charCodeAt(0)).join("");
+}
+
+function split(str){
+  let p=[];
+  for(let i=0;i<str.length;i+=20){
+    p.push(str.slice(i,i+20));
+  }
+  return p;
+}
+
+function obfuscate(){
+  let code=document.getElementById("input").value;
+
+  let map={};
+  code=code.replace(/\b(local\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\b/g,
+  (m,l,n)=>{
+    if(["function","end","if","then","do","for","while"].includes(n)) return m;
+    if(!map[n]) map[n]=anomalyName();
+    return (l||"")+map[n];
+  });
+
+  let enc=encode(code);
+  let parts=split(enc);
+
+  let varName=anomalyName();
+  let build=parts.map(p=>`"${p}"`).join("..");
+  let dec=anomalyName();
+
+  let final=`
+-- KrammzLuaa
+
+local ${varName}=${build}
+
+local function ${dec}(s)
+  local r=""
+  for i=1,#s do
+    local c=string.sub(s,i,i)
+    if c=="\\\\" then
+      local n=""
+      i=i+1
+      while string.match(string.sub(s,i,i),"%d") do
+        n=n..string.sub(s,i,i)
+        i=i+1
+      end
+      r=r..string.char(tonumber(n))
+    end
+  end
+  return r
+end
+
+loadstring(${dec}(${varName}))()
+`;
+
+  document.getElementById("output").value=final;
+}
+
+function copyOut(){
+  let o=document.getElementById("output");
+  o.select();
+  document.execCommand("copy");
+  alert("Copied!");
+}
+
+function download(){
+  let text=document.getElementById("output").value;
+  let blob=new Blob([text],{type:"text/plain"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="krammzluaa.lua.txt";
+  a.click();
+}
+</script>
+
+</body>
+</html>
 canvas.height = window.innerHeight;
 canvas.width = window.innerWidth;
 
