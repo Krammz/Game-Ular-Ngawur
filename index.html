@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ModLoader Collection</title>
+    <title>ModLoader Collection - Shared</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -31,6 +33,11 @@
             font-size: 24px;
             font-weight: bold;
             color: #333;
+        }
+
+        .status {
+            font-size: 14px;
+            color: #666;
         }
 
         .hamburger {
@@ -187,13 +194,10 @@
             margin: 20px 0;
             cursor: pointer;
             transition: all 0.3s;
+            background: #fafafa;
         }
 
-        .upload-area:hover {
-            background: #f8f8f8;
-        }
-
-        .upload-area.dragover {
+        .upload-area:hover, .upload-area.dragover {
             background: #e8f4fd;
             border-color: #007bff;
         }
@@ -201,6 +205,18 @@
         #fileInput {
             display: none;
         }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .loading { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
         .mods-grid {
             display: grid;
@@ -227,12 +243,20 @@
             font-weight: bold;
             margin-bottom: 10px;
             color: #000;
+            word-break: break-all;
         }
 
         .mod-date {
             color: #666;
             font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .mod-uploader {
+            color: #007bff;
+            font-size: 14px;
             margin-bottom: 15px;
+            font-weight: 500;
         }
 
         .mod-download {
@@ -251,12 +275,25 @@
             background: #333;
         }
 
-        .tab-content {
+        .loading-spinner {
             display: none;
+            text-align: center;
+            padding: 20px;
         }
 
-        .tab-content.active {
-            display: block;
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -264,7 +301,6 @@
                 flex-direction: column;
                 align-items: center;
             }
-            
             .stat-box {
                 min-width: 250px;
             }
@@ -272,8 +308,25 @@
     </style>
 </head>
 <body>
+    <!-- PASTE KONFIGURASI FIREBASE ANDA DI SINI -->
+    <script>
+        // 🔥 GANTI DENGAN CONFIG FIREBASE ANDA 🔥
+        const firebaseConfig = {
+            // apiKey: "YOUR_API_KEY",
+            // authDomain: "YOUR_PROJECT.firebaseapp.com",
+            // projectId: "YOUR_PROJECT_ID",
+            // storageBucket: "YOUR_PROJECT.appspot.com",
+            // messagingSenderId: "123456789",
+            // appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+
     <div class="header">
-        <div class="logo">ModLoader</div>
+        <div class="logo">🔥 ModLoader <span class="status" id="onlineStatus">Online</span></div>
         <button class="hamburger" onclick="toggleMenu()">☰</button>
     </div>
 
@@ -289,11 +342,11 @@
         <div class="stats-container">
             <div class="stat-box">
                 <div class="stat-label">Total Script</div>
-                <div class="stat-number" id="totalScripts">1,247</div>
+                <div class="stat-number" id="totalScripts">0</div>
             </div>
             <div class="stat-box">
                 <div class="stat-label">Total Modloader</div>
-                <div class="stat-number" id="totalModloaders">89</div>
+                <div class="stat-number" id="totalModloaders">0</div>
             </div>
         </div>
         <button class="explore-btn" onclick="showExplore()">Jelajahi Koleksi</button>
@@ -309,6 +362,10 @@
                 <input type="file" id="fileInput" accept=".lua" onchange="uploadMod(event)">
             </div>
             <div id="uploadStatus"></div>
+            <div class="loading-spinner" id="uploadSpinner">
+                <div class="spinner"></div>
+                <p>Mengupload...</p>
+            </div>
         </div>
     </div>
 
@@ -316,40 +373,191 @@
     <div class="modal" id="exploreModal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('exploreModal')">&times;</span>
-            <h2 style="text-align: center; margin-bottom: 30px; color: #000;">Koleksi Mod</h2>
-            <div class="mods-grid" id="modsGrid">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #000;">Koleksi Mod <span id="liveCount">(0)</span></h2>
+            <div class="loading-spinner" id="modsSpinner">
+                <div class="spinner"></div>
+                <p>Memuat mods...</p>
+            </div>
+            <div class="mods-grid" id="modsGrid" style="display: none;">
                 <!-- Mods akan dimuat di sini -->
             </div>
         </div>
     </div>
 
     <script>
-        let mods = JSON.parse(localStorage.getItem('mods')) || [];
-        let totalScripts = 1247;
-        let totalModloaders = 89;
+        let mods = [];
+        let isUploading = false;
 
+        // Initialize app
+        async function initApp() {
+            try {
+                await loadStats();
+                await loadMods();
+                document.getElementById('onlineStatus').textContent = 'Online ✅';
+            } catch (error) {
+                console.error('Firebase Error:', error);
+                document.getElementById('onlineStatus').textContent = 'Offline ⚠️';
+                document.getElementById('onlineStatus').style.color = '#ff6b6b';
+            }
+        }
+
+        // Load total stats
+        async function loadStats() {
+            const snapshot = await db.collection('mods').get();
+            const totalScriptsEl = document.getElementById('totalScripts');
+            const totalModloadersEl = document.getElementById('totalModloaders');
+            
+            totalScriptsEl.textContent = snapshot.size.toLocaleString();
+            totalModloadersEl.textContent = '89'; // Fixed number
+        }
+
+        // Load mods from Firestore
+        async function loadMods() {
+            const grid = document.getElementById('modsGrid');
+            const spinner = document.getElementById('modsSpinner');
+            const countEl = document.getElementById('liveCount');
+            
+            spinner.style.display = 'block';
+            grid.style.display = 'none';
+
+            try {
+                const snapshot = await db.collection('mods')
+                    .orderBy('timestamp', 'desc')
+                    .limit(50)
+                    .get();
+                
+                mods = [];
+                const html = [];
+                
+                snapshot.forEach(doc => {
+                    const mod = doc.data();
+                    mods.push({ id: doc.id, ...mod });
+                    html.push(`
+                        <div class="mod-card">
+                            <div class="mod-name">${mod.name}</div>
+                            <div class="mod-uploader">👤 ${mod.uploader || 'Anonymous'}</div>
+                            <div class="mod-date">${new Date(mod.timestamp.toDate()).toLocaleString('id-ID')}</div>
+                            <div style="color: #666; font-size: 14px; margin-bottom: 20px;">
+                                ${formatFileSize(mod.size)}
+                            </div>
+                            <button class="mod-download" onclick="downloadMod('${doc.id}', '${mod.name}')">
+                                📥 Download (${formatFileSize(mod.size)})
+                            </button>
+                        </div>
+                    `);
+                });
+                
+                grid.innerHTML = html.join('');
+                grid.style.display = 'grid';
+                spinner.style.display = 'none';
+                countEl.textContent = `(${mods.length})`;
+                
+            } catch (error) {
+                console.error('Error loading mods:', error);
+                grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">Error loading mods</p>';
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Upload mod to Firestore
+        async function uploadMod(event) {
+            if (isUploading) return;
+            
+            const file = event.target.files[0];
+            if (!file || !file.name.endsWith('.lua')) {
+                showStatus('Harap pilih file .lua yang valid!', 'error');
+                return;
+            }
+
+            isUploading = true;
+            const statusEl = document.getElementById('uploadStatus');
+            const spinnerEl = document.getElementById('uploadSpinner');
+            
+            showStatus('Mengupload...', 'loading');
+            spinnerEl.style.display = 'block';
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        await db.collection('mods').add({
+                            name: file.name,
+                            content: e.target.result,
+                            size: file.size,
+                            uploader: 'User-' + Math.floor(Math.random() * 10000),
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        showStatus('✅ Mod berhasil diupload dan tersedia untuk semua orang!', 'success');
+                        loadStats();
+                        setTimeout(() => {
+                            closeModal('uploadModal');
+                            document.getElementById('fileInput').value = '';
+                            statusEl.innerHTML = '';
+                            spinnerEl.style.display = 'none';
+                        }, 2500);
+                        
+                    } catch (error) {
+                        console.error('Upload error:', error);
+                        showStatus('❌ Error upload: ' + error.message, 'error');
+                    }
+                    isUploading = false;
+                };
+                reader.readAsText(file);
+            } catch (error) {
+                showStatus('❌ Error: ' + error.message, 'error');
+                isUploading = false;
+            }
+        }
+
+        // Download mod
+        async function downloadMod(docId, fileName) {
+            try {
+                const doc = await db.collection('mods').doc(docId).get();
+                if (doc.exists) {
+                    const mod = doc.data();
+                    const blob = new Blob([mod.content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                alert('Error download: ' + error.message);
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('uploadStatus');
+            statusEl.innerHTML = `<div class="status-message ${type}">${message}</div>`;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // UI Functions
         function toggleMenu() {
-            const menu = document.getElementById('navMenu');
-            menu.classList.toggle('active');
+            document.getElementById('navMenu').classList.toggle('active');
         }
 
         function showTab(tab) {
-            // Sembunyikan semua tab content
-            document.querySelectorAll('.main-content').forEach(content => {
-                content.style.display = 'none';
-            });
-            
-            // Tampilkan tab yang dipilih
-            if (tab === 'home') {
-                document.getElementById('homeTab').style.display = 'block';
-            } else if (tab === 'upload') {
+            if (tab === 'upload') {
                 document.getElementById('uploadModal').style.display = 'flex';
             } else if (tab === 'collection') {
-                document.getElementById('exploreModal').style.display = 'flex';
-                loadMods();
+                showExplore();
+            } else {
+                document.getElementById('homeTab').style.display = 'block';
             }
-            
-            toggleMenu(); // Tutup menu
+            toggleMenu();
         }
 
         function showExplore() {
@@ -361,11 +569,598 @@
             document.getElementById(modalId).style.display = 'none';
         }
 
-        function uploadMod(event) {
+        // Drag & Drop
+        const uploadArea = document.querySelector('.upload-area');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        });
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            document.getElementById('fileInput').files = files;
+            uploadMod({ target: { files: files } });
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Real-time updates
+        db.collection('mods').onSnapshot(() => {
+            loadStats();
+        });
+
+        // Initialize
+        window.onload = initApp;
+    </script>
+</body>
+    </html>        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #333;
+            font-size: 18px;
+            display: block;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .nav-menu a:hover {
+            background: #f0f0f0;
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: white;
+            border: 3px solid #000;
+            padding: 30px 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-width: 200px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .explore-btn {
+            display: block;
+            margin: 0 auto 60px;
+            padding: 20px 50px;
+            background: white;
+            color: #000;
+            border: 3px solid #000;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .explore-btn:hover {
+            background: #000;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 30px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .upload-area {
+            border: 3px dashed #000;
+            padding: 40px;
+            text-align: center;
+            border-radius: 15px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            background: #e8f4fd;
+            border-color: #007bff;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .loading { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .mods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .mod-card {
+            background: white;
+            border: 2px solid #000;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .mod-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .mod-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000;
+            word-break: break-all;
+        }
+
+        .mod-date {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .mod-uploader {
+            color: #007bff;
+            font-size: 14px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .mod-download {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        .mod-download:hover {
+            background: #333;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .stat-box {
+                min-width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- PASTE KONFIGURASI FIREBASE ANDA DI SINI -->
+    <script>
+        // 🔥 GANTI DENGAN CONFIG FIREBASE ANDA 🔥
+        const firebaseConfig = {
+            // apiKey: "YOUR_API_KEY",
+            // authDomain: "YOUR_PROJECT.firebaseapp.com",
+            // projectId: "YOUR_PROJECT_ID",
+            // storageBucket: "YOUR_PROJECT.appspot.com",
+            // messagingSenderId: "123456789",
+            // appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+    </script>
+
+    <div class="header">
+        <div class="logo">🔥 ModLoader <span class="status" id="onlineStatus">Online</span></div>
+        <button class="hamburger" onclick="toggleMenu()">☰</button>
+    </div>
+
+    <div class="nav-menu" id="navMenu">
+        <ul>
+            <li><a href="#" onclick="showTab('home')">🏠 Home</a></li>
+            <li><a href="#" onclick="showTab('upload')">📤 Upload Mod</a></li>
+            <li><a href="#" onclick="showTab('collection')">📂 Koleksi Mod</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content" id="homeTab">
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Total Script</div>
+                <div class="stat-number" id="totalScripts">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Total Modloader</div>
+                <div class="stat-number" id="totalModloaders">0</div>
+            </div>
+        </div>
+        <button class="explore-btn" onclick="showExplore()">Jelajahi Koleksi</button>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('uploadModal')">&times;</span>
+            <h2 style="text-align: center; margin-bottom: 30px; color: #000;">Upload Mod Lua</h2>
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <p>📁 Klik atau drag & drop file .lua Anda di sini</p>
+                <input type="file" id="fileInput" accept=".lua" onchange="uploadMod(event)">
+            </div>
+            <div id="uploadStatus"></div>
+            <div class="loading-spinner" id="uploadSpinner">
+                <div class="spinner"></div>
+                <p>Mengupload...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Explore Modal -->
+    <div class="modal" id="exploreModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('exploreModal')">&times;</span>
+            <h2 style="text-align: center; margin-bottom: 30px; color: #000;">Koleksi Mod <span id="liveCount">(0)</span></h2>
+            <div class="loading-spinner" id="modsSpinner">
+                <div class="spinner"></div>
+                <p>Memuat mods...</p>
+            </div>
+            <div class="mods-grid" id="modsGrid" style="display: none;">
+                <!-- Mods akan dimuat di sini -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mods = [];
+        let isUploading = false;
+
+        // Initialize app
+        async function initApp() {
+            try {
+                await loadStats();
+                await loadMods();
+                document.getElementById('onlineStatus').textContent = 'Online ✅';
+            } catch (error) {
+                console.error('Firebase Error:', error);
+                document.getElementById('onlineStatus').textContent = 'Offline ⚠️';
+                document.getElementById('onlineStatus').style.color = '#ff6b6b';
+            }
+        }
+
+        // Load total stats
+        async function loadStats() {
+            const snapshot = await db.collection('mods').get();
+            const totalScriptsEl = document.getElementById('totalScripts');
+            const totalModloadersEl = document.getElementById('totalModloaders');
+            
+            totalScriptsEl.textContent = snapshot.size.toLocaleString();
+            totalModloadersEl.textContent = '89'; // Fixed number
+        }
+
+        // Load mods from Firestore
+        async function loadMods() {
+            const grid = document.getElementById('modsGrid');
+            const spinner = document.getElementById('modsSpinner');
+            const countEl = document.getElementById('liveCount');
+            
+            spinner.style.display = 'block';
+            grid.style.display = 'none';
+
+            try {
+                const snapshot = await db.collection('mods')
+                    .orderBy('timestamp', 'desc')
+                    .limit(50)
+                    .get();
+                
+                mods = [];
+                const html = [];
+                
+                snapshot.forEach(doc => {
+                    const mod = doc.data();
+                    mods.push({ id: doc.id, ...mod });
+                    html.push(`
+                        <div class="mod-card">
+                            <div class="mod-name">${mod.name}</div>
+                            <div class="mod-uploader">👤 ${mod.uploader || 'Anonymous'}</div>
+                            <div class="mod-date">${new Date(mod.timestamp.toDate()).toLocaleString('id-ID')}</div>
+                            <div style="color: #666; font-size: 14px; margin-bottom: 20px;">
+                                ${formatFileSize(mod.size)}
+                            </div>
+                            <button class="mod-download" onclick="downloadMod('${doc.id}', '${mod.name}')">
+                                📥 Download (${formatFileSize(mod.size)})
+                            </button>
+                        </div>
+                    `);
+                });
+                
+                grid.innerHTML = html.join('');
+                grid.style.display = 'grid';
+                spinner.style.display = 'none';
+                countEl.textContent = `(${mods.length})`;
+                
+            } catch (error) {
+                console.error('Error loading mods:', error);
+                grid.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #666;">Error loading mods</p>';
+                spinner.style.display = 'none';
+            }
+        }
+
+        // Upload mod to Firestore
+        async function uploadMod(event) {
+            if (isUploading) return;
+            
             const file = event.target.files[0];
-            if (file && file.name.endsWith('.lua')) {
+            if (!file || !file.name.endsWith('.lua')) {
+                showStatus('Harap pilih file .lua yang valid!', 'error');
+                return;
+            }
+
+            isUploading = true;
+            const statusEl = document.getElementById('uploadStatus');
+            const spinnerEl = document.getElementById('uploadSpinner');
+            
+            showStatus('Mengupload...', 'loading');
+            spinnerEl.style.display = 'block';
+
+            try {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
+                    try {
+                        await db.collection('mods').add({
+                            name: file.name,
+                            content: e.target.result,
+                            size: file.size,
+                            uploader: 'User-' + Math.floor(Math.random() * 10000),
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        showStatus('✅ Mod berhasil diupload dan tersedia untuk semua orang!', 'success');
+                        loadStats();
+                        setTimeout(() => {
+                            closeModal('uploadModal');
+                            document.getElementById('fileInput').value = '';
+                            statusEl.innerHTML = '';
+                            spinnerEl.style.display = 'none';
+                        }, 2500);
+                        
+                    } catch (error) {
+                        console.error('Upload error:', error);
+                        showStatus('❌ Error upload: ' + error.message, 'error');
+                    }
+                    isUploading = false;
+                };
+                reader.readAsText(file);
+            } catch (error) {
+                showStatus('❌ Error: ' + error.message, 'error');
+                isUploading = false;
+            }
+        }
+
+        // Download mod
+        async function downloadMod(docId, fileName) {
+            try {
+                const doc = await db.collection('mods').doc(docId).get();
+                if (doc.exists) {
+                    const mod = doc.data();
+                    const blob = new Blob([mod.content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                alert('Error download: ' + error.message);
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('uploadStatus');
+            statusEl.innerHTML = `<div class="status-message ${type}">${message}</div>`;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // UI Functions
+        function toggleMenu() {
+            document.getElementById('navMenu').classList.toggle('active');
+        }
+
+        function showTab(tab) {
+            if (tab === 'upload') {
+                document.getElementById('uploadModal').style.display = 'flex';
+            } else if (tab === 'collection') {
+                showExplore();
+            } else {
+                document.getElementById('homeTab').style.display = 'block';
+            }
+            toggleMenu();
+        }
+
+        function showExplore() {
+            document.getElementById('exploreModal').style.display = 'flex';
+            loadMods();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Drag & Drop
+        const uploadArea = document.querySelector('.upload-area');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        });
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            document.getElementById('fileInput').files = files;
+            uploadMod({ target: { files: files } });
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Real-time updates
+        db.collection('mods').onSnapshot(() => {
+            loadStats();
+        });
+
+        // Initialize
+        window.onload = initApp;
+    </script>
+</body>
+    </html>(e) {
                     const mod = {
                         id: Date.now(),
                         name: file.name,
