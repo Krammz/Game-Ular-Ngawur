@@ -1,26 +1,31 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>S4-Samp Cloud Full</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S4-Samp - Full Script Cloud</title>
 
-<style>
-/* === CSS ASLI LO (DIRINGKAS BIAR RAPI) === */
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Segoe UI';background:linear-gradient(135deg,#f5f7fa,#c3cfe2);}
-header{background:#fff;padding:15px;display:flex;justify-content:space-between;}
-nav{display:flex;gap:10px;padding:10px;}
-.section{display:none;}
-.section.active{display:block;}
-.collection-item{background:#fff;padding:15px;margin:10px;border-radius:10px;}
-</style>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI'; background: linear-gradient(135deg,#f5f7fa,#c3cfe2); }
+
+        header { background:#fff; display:flex; justify-content:space-between; padding:15px; }
+        nav { display:flex; gap:10px; padding:10px; }
+
+        .section { display:none; }
+        .section.active { display:block; }
+
+        .collection-item {
+            background:#fff; padding:20px; margin:10px;
+            border-radius:15px;
+        }
+    </style>
 </head>
 
 <body>
 
 <header>
-<h1>🎮 S4-Samp Cloud</h1>
+<h1>🎮 S4-Samp Mod Center</h1>
 <button onclick="location.reload()">🔄 Refresh</button>
 </header>
 
@@ -33,23 +38,34 @@ nav{display:flex;gap:10px;padding:10px;}
 <main>
 
 <section id="home" class="section active">
-<h2>🚀 S4-Samp Cloud Aktif</h2>
-<p>Realtime + Offline Support 🔥</p>
+<h2>🚀 S4-Samp</h2>
+<p>FULL SCRIPT + CLOUD SYNC 🔥</p>
 </section>
 
 <section id="koleksi" class="section">
-<h2>📦 Koleksi Mod</h2>
+<h2>📦 Koleksi</h2>
+
+<button onclick="exportMods()">💾 Export</button>
+<input type="file" id="importFile">
+
 <div id="collectionList"></div>
 </section>
 
 <section id="upload" class="section">
-<h2>➕ Upload Mod</h2>
+<h2>➕ Upload</h2>
 
 <form id="uploadForm">
 <input id="namaMod" placeholder="Nama Mod" required><br><br>
 <input id="versiMod" placeholder="Versi" required><br><br>
+<input id="deskripsiMod" placeholder="Deskripsi"><br><br>
 <input id="authorMod" placeholder="Author" required><br><br>
-<input id="linkDownload" placeholder="Link Download" required><br><br>
+<select id="perangkatMod">
+<option value="PC">PC</option>
+<option value="Mobile">Mobile</option>
+</select><br><br>
+<input id="linkDownload" placeholder="Link" required><br><br>
+<input type="file" id="uploadGambar"><br><br>
+
 <button type="submit">Upload</button>
 </form>
 
@@ -57,7 +73,7 @@ nav{display:flex;gap:10px;padding:10px;}
 
 </main>
 
-<!-- 🔥 FIREBASE + SYSTEM -->
+<!-- 🔥 SCRIPT FULL -->
 <script type="module">
 
 /* ================= FIREBASE ================= */
@@ -77,110 +93,144 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const db = getFirestore(app);
+const cloudDB = getFirestore(app);
 
-/* ================= INDEXEDDB (BACKUP) ================= */
-class LocalDB {
-constructor(){
-this.db=null;
-this.init();
-}
-init(){
-const req=indexedDB.open("S4DB",1);
-req.onupgradeneeded=e=>{
-this.db=e.target.result;
-this.db.createObjectStore("mods",{keyPath:"id"});
-};
-req.onsuccess=e=>{
-this.db=e.target.result;
-this.load();
-};
-}
-save(mod){
-const tx=this.db.transaction(["mods"],"readwrite");
-tx.objectStore("mods").put(mod);
-}
-load(){
-const tx=this.db.transaction(["mods"],"readonly");
-const req=tx.objectStore("mods").getAll();
-req.onsuccess=()=>{
-window.localMods=req.result;
-renderMods();
-};
-}
+/* ================= INDEXEDDB (ASLI LO) ================= */
+class S4ModDB {
+    constructor() {
+        this.db = null;
+        this.init();
+    }
+
+    init() {
+        const req = indexedDB.open('S4SampDB', 2);
+        req.onupgradeneeded = (e) => {
+            this.db = e.target.result;
+            if (!this.db.objectStoreNames.contains('mods')) {
+                this.db.createObjectStore('mods', { keyPath: 'id', autoIncrement: true });
+            }
+        };
+        req.onsuccess = () => {
+            this.db = req.result;
+            this.loadAll();
+        };
+    }
+
+    async save(mod) {
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(['mods'], 'readwrite');
+            const store = tx.objectStore('mods');
+            mod.id = Date.now();
+            store.put(mod);
+            tx.oncomplete = () => resolve(mod);
+        });
+    }
+
+    async loadAll() {
+        return new Promise((resolve) => {
+            const tx = this.db.transaction(['mods'], 'readonly');
+            const store = tx.objectStore('mods');
+            const req = store.getAll();
+            req.onsuccess = () => {
+                window.modsData = req.result.reverse();
+                renderMods(window.modsData);
+                resolve();
+            };
+        });
+    }
+
+    async delete(id) {
+        const tx = this.db.transaction(['mods'], 'readwrite');
+        tx.objectStore('mods').delete(id);
+        this.loadAll();
+    }
 }
 
-const localDB=new LocalDB();
-
-/* ================= UI ================= */
-function showSection(id){
-document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-}
-window.showSection=showSection;
-
-const list=document.getElementById("collectionList");
+const db = new S4ModDB();
 
 /* ================= RENDER ================= */
-function renderMods(data){
-if(!data) return;
-list.innerHTML="";
-data.forEach(mod=>{
-list.innerHTML+=`
-<div class="collection-item">
-<h3>${mod.namaMod}</h3>
-<p>Versi: ${mod.versiMod}</p>
-<p>Author: ${mod.authorMod}</p>
-<a href="${mod.linkDownload}" target="_blank">⬇️ Download</a>
-</div>
-`;
-});
+function renderMods(data) {
+    const list = document.getElementById('collectionList');
+    if (!data) return;
+
+    list.innerHTML = '';
+    data.forEach(mod => {
+        list.innerHTML += `
+        <div class="collection-item">
+            <h3>${mod.namaMod}</h3>
+            <p>${mod.deskripsiMod || ''}</p>
+            <p>👤 ${mod.authorMod}</p>
+            <a href="${mod.linkDownload}" target="_blank">Download</a>
+        </div>
+        `;
+    });
 }
 
 /* ================= FIREBASE REALTIME ================= */
-let cloudMods=[];
+onSnapshot(collection(cloudDB, "mods"), (snap) => {
+    const cloudData = [];
+    snap.forEach(doc => cloudData.push(doc.data()));
 
-onSnapshot(collection(db,"mods"),snap=>{
-cloudMods=[];
-snap.forEach(doc=>{
-cloudMods.push(doc.data());
-});
+    // gabung ke local
+    cloudData.forEach(m => db.save(m));
 
-// sync ke local backup
-cloudMods.forEach(m=>localDB.save(m));
-
-// render dari cloud
-renderMods(cloudMods);
+    renderMods(cloudData);
 });
 
 /* ================= UPLOAD ================= */
-document.getElementById("uploadForm").onsubmit=async e=>{
-e.preventDefault();
+document.getElementById('uploadForm').onsubmit = async (e) => {
+    e.preventDefault();
 
-const mod={
-namaMod:namaMod.value,
-versiMod:versiMod.value,
-authorMod:authorMod.value,
-linkDownload:linkDownload.value,
-time:Date.now()
+    const formData = {
+        namaMod: namaMod.value,
+        versiMod: versiMod.value,
+        deskripsiMod: deskripsiMod.value,
+        authorMod: authorMod.value,
+        perangkatMod: perangkatMod.value,
+        linkDownload: linkDownload.value,
+        time: Date.now()
+    };
+
+    // upload firebase
+    await addDoc(collection(cloudDB,"mods"), formData);
+
+    // simpan local
+    await db.save(formData);
+
+    alert("🔥 Upload sukses + realtime!");
+    e.target.reset();
 };
 
-// simpan ke firebase
-await addDoc(collection(db,"mods"),mod);
+/* ================= EXPORT IMPORT ================= */
+function exportMods() {
+    const data = JSON.stringify(window.modsData || []);
+    const blob = new Blob([data]);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "mods.json";
+    a.click();
+}
 
-// simpan ke local
-localDB.save(mod);
+function importMods(files) {
+    const reader = new FileReader();
+    reader.onload = async () => {
+        const data = JSON.parse(reader.result);
+        for (let m of data) await db.save(m);
+        alert("Import sukses");
+    };
+    reader.readAsText(files[0]);
+}
 
-alert("🔥 Upload sukses & realtime!");
-e.target.reset();
-};
+document.getElementById('importFile').onchange = (e)=>importMods(e.target.files);
 
-/* ================= AUTO LOAD LOCAL ================= */
-window.addEventListener("load",()=>{
-if(window.localMods) renderMods(window.localMods);
-});
+/* ================= NAV ================= */
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+window.showSection = showSection;
 
 </script>
 
 </body>
-</html>
+  </html>
