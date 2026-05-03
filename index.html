@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>KrammzLuaa Stable Obfuscator</title>
+<title>KrammzLuaa SAMP PRO</title>
 
 <style>
 body{
@@ -44,7 +44,7 @@ h1{color:#38bdf8;}
 <canvas id="matrix"></canvas>
 
 <div class="container">
-<h1>KrammzLuaa Stable 🔒</h1>
+<h1>KrammzLuaa SAMP PRO 🔥</h1>
 
 <textarea id="input" placeholder="Paste Lua script..."></textarea>
 
@@ -56,9 +56,10 @@ h1{color:#38bdf8;}
 </div>
 
 <script>
-// ===== MATRIX BG =====
+// ===== MATRIX =====
 const canvas=document.getElementById("matrix");
 const ctx=canvas.getContext("2d");
+
 canvas.height=window.innerHeight;
 canvas.width=window.innerWidth;
 
@@ -86,55 +87,95 @@ function draw(){
 }
 setInterval(draw,33);
 
-// ===== OBFUSCATOR =====
+// ===== RANDOM NAME =====
 function rand(len=8){
   const c="abcdefghijklmnopqrstuvwxyz";
   let r="_";
-  for(let i=0;i<len;i++) r+=c[Math.floor(Math.random()*c.length)];
+  for(let i=0;i<len;i++){
+    r+=c[Math.floor(Math.random()*c.length)];
+  }
   return r;
 }
 
+// ===== AUTO DETECT CMD =====
+function getCMDNames(code){
+  let cmds=[];
+  let regex=/registerChatCommand\s*\(\s*["'](.*?)["']/g;
+  let match;
+  while((match=regex.exec(code))!==null){
+    cmds.push(match[1]);
+  }
+
+  let regex2=/sampRegisterChatCommand\s*\(\s*["'](.*?)["']/g;
+  while((match=regex2.exec(code))!==null){
+    cmds.push(match[1]);
+  }
+
+  return cmds;
+}
+
+// ===== OBFUSCATOR =====
 function obfuscate(){
   let code=document.getElementById("input").value;
 
-  // Rename variable (safe)
+  let detectedCMD = getCMDNames(code);
+
+  const whitelist=[
+    "function","end","if","then","do","for","while",
+    "print","string","table",
+    "registerChatCommand",
+    "sampRegisterChatCommand",
+    "onSendCommand",
+    "onSendChat",
+    ...detectedCMD
+  ];
+
   let map={};
+
+  // Rename SAFE
   code=code.replace(/\b(local\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\b/g,(m,l,n)=>{
-    if(["function","end","if","then","do","for","while","print","string","table"].includes(n)) return m;
+    if(whitelist.includes(n)) return m;
     if(!map[n]) map[n]=rand();
     return (l||"")+map[n];
   });
 
-  // Convert ke byte array
+  // ===== LAYER 1 ENCODE =====
   let bytes=[];
   for(let i=0;i<code.length;i++){
     bytes.push(code.charCodeAt(i));
   }
 
-  let arr = bytes.join(",");
+  // ===== LAYER 2 ENCODE (reverse + noise) =====
+  bytes = bytes.reverse().map(n=>n+1);
 
-  let dataVar = rand();
-  let func = rand();
+  let dataVar=rand();
+  let func1=rand();
+  let func2=rand();
 
   let final = `
--- KrammzLuaa Stable
+-- KrammzLuaa SAMP PRO
 
-local ${dataVar}={${arr}}
+local ${dataVar}={${bytes.join(",")}}
 
-local function ${func}(t)
+local function ${func1}(t)
   local s=""
   for i=1,#t do
-    s=s..string.char(t[i])
+    s=s..string.char(t[i]-1)
   end
   return s
 end
 
-loadstring(${func}(${dataVar}))()
+local function ${func2}(str)
+  return string.reverse(str)
+end
+
+${func2}(${func1}(${dataVar}))()
 `;
 
   document.getElementById("output").value=final;
 }
 
+// ===== COPY =====
 function copyOut(){
   let o=document.getElementById("output");
   o.select();
@@ -142,12 +183,13 @@ function copyOut(){
   alert("Copied!");
 }
 
+// ===== DOWNLOAD =====
 function download(){
   let text=document.getElementById("output").value;
   let blob=new Blob([text],{type:"text/plain"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download="krammzluaa_stable.lua.txt";
+  a.download="krammzluaa_samp_pro.lua.txt";
   a.click();
 }
 </script>
