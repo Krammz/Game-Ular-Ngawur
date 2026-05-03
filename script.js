@@ -1,7 +1,29 @@
 class ModLoader {
     constructor() {
-        this.mods = JSON.parse(localStorage.getItem('mods')) || [];
+        this.mods = [];
+        this.loadModsFromStorage();
         this.init();
+    }
+
+    loadModsFromStorage() {
+        try {
+            const saved = localStorage.getItem('mods');
+            if (saved) {
+                this.mods = JSON.parse(saved);
+            }
+        } catch (error) {
+            console.log('Error loading mods:', error);
+            this.mods = [];
+            localStorage.setItem('mods', JSON.stringify(this.mods));
+        }
+    }
+
+    saveModsToStorage() {
+        try {
+            localStorage.setItem('mods', JSON.stringify(this.mods));
+        } catch (error) {
+            console.log('Error saving mods:', error);
+        }
     }
 
     init() {
@@ -13,9 +35,15 @@ class ModLoader {
 
     bindEvents() {
         // Menu toggle
-        document.getElementById('menuToggle').addEventListener('click', () => {
-            document.getElementById('mobileMenu').classList.toggle('active');
-        });
+        const menuToggle = document.getElementById('menuToggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                const mobileMenu = document.getElementById('mobileMenu');
+                if (mobileMenu) {
+                    mobileMenu.classList.toggle('active');
+                }
+            });
+        }
 
         // Navigation
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -25,36 +53,53 @@ class ModLoader {
                 this.showPage(page);
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
-                document.getElementById('mobileMenu').classList.remove('active');
+                const mobileMenu = document.getElementById('mobileMenu');
+                if (mobileMenu) {
+                    mobileMenu.classList.remove('active');
+                }
             });
         });
 
         // Explore button
-        document.getElementById('exploreBtn').addEventListener('click', () => {
-            this.showPage('collection');
-        });
+        const exploreBtn = document.getElementById('exploreBtn');
+        if (exploreBtn) {
+            exploreBtn.addEventListener('click', () => {
+                this.showPage('collection');
+            });
+        }
 
-        // Upload
+        // Upload handlers
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
         
-        uploadArea.addEventListener('click', () => fileInput.click());
-        uploadArea.addEventListener('dragover', this.handleDragOver);
-        uploadArea.addEventListener('drop', (e) => this.handleDrop(e, fileInput));
-        fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        if (uploadArea && fileInput) {
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
+            uploadArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
+            uploadArea.addEventListener('drop', (e) => this.handleDrop(e, fileInput));
+            fileInput.addEventListener('change', (e) => this.handleFileSelect(e));
+        }
 
-        document.getElementById('uploadBtn').addEventListener('click', () => {
-            fileInput.click();
-        });
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', () => {
+                if (fileInput) fileInput.click();
+            });
+        }
 
         // Modal
-        document.querySelector('.close').addEventListener('click', () => {
-            document.getElementById('downloadModal').style.display = 'none';
-        });
+        const closeBtn = document.querySelector('.close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                const modal = document.getElementById('downloadModal');
+                if (modal) modal.style.display = 'none';
+            });
+        }
 
+        // Close modal on outside click
         window.addEventListener('click', (e) => {
             const modal = document.getElementById('downloadModal');
-            if (e.target === modal) {
+            if (modal && e.target === modal) {
                 modal.style.display = 'none';
             }
         });
@@ -63,69 +108,122 @@ class ModLoader {
     handleDragOver(e) {
         e.preventDefault();
         e.currentTarget.style.background = '#e8f4f8';
+        e.currentTarget.style.borderColor = '#000';
+    }
+
+    handleDragLeave(e) {
+        e.currentTarget.style.background = '#f8f8f8';
+        e.currentTarget.style.borderColor = '#000';
     }
 
     handleDrop(e, fileInput) {
         e.preventDefault();
-        e.currentTarget.style.background = '#f8f8f8';
+        this.handleDragLeave(e);
         const files = e.dataTransfer.files;
         if (files.length > 0) {
-            fileInput.files = files;
-            this.handleFileSelect({ target: { files } });
+            const dt = new DataTransfer();
+            dt.items.add(files[0]);
+            fileInput.files = dt.files;
+            this.handleFileSelect({ target: { files: dt.files } });
         }
     }
 
     handleFileSelect(e) {
         const file = e.target.files[0];
-        if (file && file.name.endsWith('.lua')) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.addMod(file.name, e.target.result);
-            };
-            reader.readAsText(file);
-        } else {
-            document.getElementById('uploadStatus').textContent = 'Hanya file .lua yang diperbolehkan!';
-            document.getElementById('uploadStatus').style.color = '#ff4444';
+        const statusEl = document.getElementById('uploadStatus');
+        
+        if (!file) {
+            if (statusEl) statusEl.textContent = '';
+            return;
         }
+
+        if (!file.name.toLowerCase().endsWith('.lua')) {
+            if (statusEl) {
+                statusEl.textContent = '❌ Hanya file .LUA yang diperbolehkan!';
+                statusEl.style.color = '#ff4444';
+            }
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                this.addMod(file.name, e.target.result);
+                if (statusEl) {
+                    statusEl.textContent = '✅ Mod berhasil diupload!';
+                    statusEl.style.color = '#00aa00';
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                if (statusEl) {
+                    statusEl.textContent = '❌ Error upload file!';
+                    statusEl.style.color = '#ff4444';
+                }
+            }
+        };
+        reader.onerror = () => {
+            if (statusEl) {
+                statusEl.textContent = '❌ Error membaca file!';
+                statusEl.style.color = '#ff4444';
+            }
+        };
+        reader.readAsText(file);
     }
 
     addMod(name, content) {
         const mod = {
-            id: Date.now(),
-            name: name,
-            content: content,
-            date: new Date().toLocaleDateString('id-ID')
+            id: Date.now() + Math.random(),
+            name: name.substring(0, 50), // Limit nama file
+            content: content.substring(0, 50000), // Limit ukuran 50KB
+            date: new Date().toLocaleDateString('id-ID'),
+            size: content.length
         };
 
         this.mods.unshift(mod);
-        localStorage.setItem('mods', JSON.stringify(this.mods));
+        if (this.mods.length > 100) { // Max 100 mods
+            this.mods = this.mods.slice(0, 100);
+        }
+
+        this.saveModsToStorage();
         this.updateStats();
         this.loadMods();
-        document.getElementById('uploadStatus').textContent = 'Mod berhasil diupload!';
-        document.getElementById('uploadStatus').style.color = '#00aa00';
-        
+
         // Reset input
-        document.getElementById('fileInput').value = '';
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) fileInput.value = '';
+
+        // Clear status after 3 seconds
         setTimeout(() => {
-            document.getElementById('uploadStatus').textContent = '';
+            const statusEl = document.getElementById('uploadStatus');
+            if (statusEl) statusEl.textContent = '';
         }, 3000);
     }
 
     updateStats() {
-        document.getElementById('totalScripts').textContent = this.mods.length;
-        document.getElementById('totalModloader').textContent = this.mods.length;
+        const totalScriptsEl = document.getElementById('totalScripts');
+        const totalModloaderEl = document.getElementById('totalModloader');
+        
+        if (totalScriptsEl) totalScriptsEl.textContent = this.mods.length;
+        if (totalModloaderEl) totalModloaderEl.textContent = this.mods.length;
     }
 
     loadMods() {
         const container = document.getElementById('modsList');
+        if (!container) return;
+
         container.innerHTML = '';
+
+        if (this.mods.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: #666; grid-column: 1/-1;">Belum ada mod yang diupload</p>';
+            return;
+        }
 
         this.mods.forEach(mod => {
             const card = document.createElement('div');
             card.className = 'mod-card';
             card.innerHTML = `
-                <div class="mod-name">${mod.name}</div>
-                <div class="mod-date">Diunggah: ${mod.date}</div>
+                <div class="mod-name">${this.escapeHtml(mod.name)}</div>
+                <div class="mod-date">📅 ${mod.date} | 📁 ${this.formatBytes(mod.size)}</div>
                 <div class="mod-preview">${this.getPreview(mod.content)}</div>
             `;
             card.addEventListener('click', () => this.showDownloadModal(mod));
@@ -133,32 +231,64 @@ class ModLoader {
         });
     }
 
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
     getPreview(content) {
-        const lines = content.split('\n').slice(0, 8);
-        return lines.join('\n').substring(0, 200) + (content.length > 200 ? '...' : '');
+        const lines = content.split('\n').slice(0, 6);
+        let preview = lines.join('\n').substring(0, 150);
+        if (content.length > 150) preview += '\n...';
+        return this.escapeHtml(preview);
     }
 
     showDownloadModal(mod) {
-        document.getElementById('modalContent').innerHTML = `
-            <h4>${mod.name}</h4>
-            <pre>${mod.content}</pre>
-        `;
+        const modalContent = document.getElementById('modalContent');
         const downloadLink = document.getElementById('downloadLink');
-        const blob = new Blob([mod.content], { type: 'text/plain' });
+        const modal = document.getElementById('downloadModal');
+        
+        if (!modalContent || !downloadLink || !modal) return;
+
+        modalContent.innerHTML = `
+            <h4>📄 ${this.escapeHtml(mod.name)}</h4>
+            <div style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">
+                📅 ${mod.date} | 📁 ${this.formatBytes(mod.size)}
+            </div>
+            <pre style="background: #f8f8f8; padding: 1rem; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-size: 0.85rem; border: 1px solid #ddd;">${this.escapeHtml(mod.content)}</pre>
+        `;
+
+        const blob = new Blob([mod.content], { type: 'text/plain;charset=utf-8' });
         downloadLink.href = URL.createObjectURL(blob);
         downloadLink.download = mod.name;
-        document.getElementById('downloadModal').style.display = 'block';
+        modal.style.display = 'block';
     }
 
     showPage(pageName) {
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
         });
-        document.getElementById(pageName).classList.add('active');
+        const pageEl = document.getElementById(pageName);
+        if (pageEl) {
+            pageEl.classList.add('active');
+        }
     }
 }
 
-// Initialize app
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        new ModLoader();
+    });
+} else {
     new ModLoader();
-});
+                }
