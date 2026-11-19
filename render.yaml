@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: krammzlua-ai
+    runtime: python
+    plan: free
+    buildCommand: "python --version"
+    startCommand: "python jalankan_krammzlua.py"
+    envVars:
+      - key: HOST
+        value: "0.0.0.0"
+      - key: JEREXD_API_KEY
+        sync: false
